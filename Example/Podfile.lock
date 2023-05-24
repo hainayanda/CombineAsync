@@ -1,0 +1,27 @@
+PODS:
+  - CombineAsync (0.1.0)
+  - Nimble (12.0.0)
+  - Quick (7.0.0)
+
+DEPENDENCIES:
+  - CombineAsync (from `../`)
+  - Nimble (~> 12.0.0)
+  - Quick (~> 7.0.0)
+
+SPEC REPOS:
+  trunk:
+    - Nimble
+    - Quick
+
+EXTERNAL SOURCES:
+  CombineAsync:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  CombineAsync: 2e2a688286ca46ad467df694c8cc33ad5e533293
+  Nimble: 02a4990866e51868303a466970cd1c81bb84a192
+  Quick: f57e9c1acc5ff48d2b04e23a17b4892eda5a3b09
+
+PODFILE CHECKSUM: 7111cabbd510e4fb32823edb28f2d28dbcbf4418
+
+COCOAPODS: 1.12.1
