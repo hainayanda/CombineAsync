@@ -68,6 +68,7 @@ class PublisherExtensionsAsyncSpec: AsyncSpec {
 
 class PublisherExtensionsSyncSpec: QuickSpec {
     
+    // swiftlint:disable function_body_length
     override class func spec() {
         describe("error replacement") {
             var subject: PassthroughSubject<Int, TestError>!

@@ -131,14 +131,12 @@ extension Publisher {
 extension Publisher where Failure == Never {
     
     /// Return this publisher first output asynchronously and return nil if its finished without value
+    /// - Parameter timeout: timeout in second
     /// - Returns: first output
-    public func sinkAsynchronously() async -> Output? {
-        try? await sinkAsynchronously()
-    }
-    
-    /// Return this publisher first output asynchronously and return nil if its finished without value
-    /// - Returns: first output
-    public func sinkAsynchronously(timeout: TimeInterval) async -> Output? {
-        try? await sinkAsynchronously(timeout: timeout)
+    public func sinkAsynchronously(timeout: TimeInterval = 0) async -> Output? {
+        guard timeout > 0 else {
+            return try? await sinkAsyncWithNoTimeout()
+        }
+        return try? await sinkAsync(with: timeout)
     }
 }
