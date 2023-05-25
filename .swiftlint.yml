@@ -2,9 +2,9 @@ excluded:
   - Example/Pods
 
 included:
-  - Draftsman
+  - CombineAsync
   - Example/Tests
-  - Example/Draftsman
+  - Example/CombineAsync
 
 disabled_rules:
  - trailing_whitespace

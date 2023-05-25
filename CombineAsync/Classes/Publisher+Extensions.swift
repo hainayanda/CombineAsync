@@ -10,6 +10,11 @@ import Combine
 
 public typealias Infallible<Output> = AnyPublisher<Output, Never>
 
+enum Ignorable<Output> {
+    case ignore
+    case passthrough(Output)
+}
+
 extension Publisher {
     
     /// Return this publisher first output asynchronously or rethrow error if occurss
@@ -28,61 +33,42 @@ extension Publisher {
     /// Return a new publisher will ignore the error
     /// - Returns: publisher that will never emit an error
     public func ignoreError() -> Infallible<Output> {
-        let subject = PassthroughSubject<Output, Never>()
-        var cancellable: AnyCancellable?
-        cancellable = sink { _ in
-            subject.send(completion: .finished)
-            cancellable?.cancel()
-        } receiveValue: { output in
-            subject.send(output)
-        }
-        return subject.eraseToAnyPublisher()
+        map { Ignorable.passthrough($0) }
+            .replaceError(with: .ignore)
+            .compactMap { ignorable in
+                switch ignorable {
+                case .passthrough(let output):
+                    return output
+                case .ignore:
+                    return nil
+                }
+            }
+            .eraseToAnyPublisher()
     }
     
     /// Return new publisher that can recover from error by using a closure that will return new output when error occurs
     /// - Parameter recovery: A closure that accept failure and return output as its replacement
     /// - Returns: publisher that will never emit an error
     public func replaceError(with recovery: @escaping (Failure) -> Output) -> Infallible<Output> {
-        let subject = PassthroughSubject<Output, Never>()
-        var cancellable: AnyCancellable?
-        cancellable = sink { completion in
-            switch completion {
-            case .finished:
-                subject.send(completion: .finished)
-            case .failure(let error):
-                subject.send(recovery(error))
-                subject.send(completion: .finished)
-            }
-            cancellable?.cancel()
-        } receiveValue: { output in
-            subject.send(output)
+        self.catch { error in
+            Just(recovery(error))
         }
-        return subject.eraseToAnyPublisher()
+        .eraseToAnyPublisher()
     }
     
     /// Return new publisher that can recover from error by using a closure that will return new output if needed when error occurs
     /// - Parameter recovery: A closure that accept failure and return output as its replacement. It will pass through the error if the output is nil.
     /// - Returns: publisher with the same type
     public func replaceErrorIfNeeded(with recovery: @escaping (Failure) -> Output?) -> AnyPublisher<Output, Failure> {
-        let subject = PassthroughSubject<Output, Failure>()
-        var cancellable: AnyCancellable?
-        cancellable = sink { completion in
-            defer { cancellable?.cancel() }
-            switch completion {
-            case .finished:
-                subject.send(completion: .finished)
-            case .failure(let error):
-                guard let recover = recovery(error) else {
-                    subject.send(completion: completion)
-                    return
-                }
-                subject.send(recover)
-                subject.send(completion: .finished)
+        tryCatch { error in
+            guard let recover = recovery(error) else {
+                throw error
             }
-        } receiveValue: { output in
-            subject.send(output)
+            return Just(recover)
         }
-        return subject.eraseToAnyPublisher()
+        // swiftlint:disable:next force_cast
+        .mapError { $0 as! Failure }
+        .eraseToAnyPublisher()
         
     }
     
