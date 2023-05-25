@@ -94,8 +94,7 @@ class PublisherExtensionsSyncSpec: QuickSpec {
                     subject.sendAfter(0.1, completion: .failure(.expectedError))
                     cancellable = subject.ignoreError()
                         .sinkTest(for: result)
-                    expect(result.wrapped).toEventuallyNot(equal(.failure(.expectedError)))
-                    expect(result.wrapped).to(equal(.failure(.initialError)))
+                    expect(result.wrapped).toAlways(equal(.failure(.initialError)))
                 }
             }
             context("recover on error") {
