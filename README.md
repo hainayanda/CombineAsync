@@ -2,7 +2,10 @@
 
 CombineAsync is Combine extensions and utilities for an async task
 
-[![CI Status](https://img.shields.io/travis/hainayanda/CombineAsync.svg?style=flat)](https://travis-ci.org/hainayanda/CombineAsync)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/d07d496defc943ad90e96fde91a55e65)](https://app.codacy.com/gh/hainayanda/CombineAsync/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+![build](https://github.com/hainayanda/CombineAsync/workflows/build/badge.svg)
+![test](https://github.com/hainayanda/CombineAsync/workflows/test/badge.svg)
+[![SwiftPM Compatible](https://img.shields.io/badge/SwiftPM-Compatible-brightgreen)](https://swift.org/package-manager/)
 [![Version](https://img.shields.io/cocoapods/v/CombineAsync.svg?style=flat)](https://cocoapods.org/pods/CombineAsync)
 [![License](https://img.shields.io/cocoapods/l/CombineAsync.svg?style=flat)](https://cocoapods.org/pods/CombineAsync)
 [![Platform](https://img.shields.io/cocoapods/p/CombineAsync.svg?style=flat)](https://cocoapods.org/pods/CombineAsync)
