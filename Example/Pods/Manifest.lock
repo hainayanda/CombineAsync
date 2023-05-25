@@ -1,5 +1,5 @@
 PODS:
-  - CombineAsync (0.1.0)
+  - CombineAsync (1.0.0)
   - Nimble (12.0.0)
   - Quick (7.0.0)
 
@@ -18,7 +18,7 @@ EXTERNAL SOURCES:
     :path: "../"
 
 SPEC CHECKSUMS:
-  CombineAsync: 2e2a688286ca46ad467df694c8cc33ad5e533293
+  CombineAsync: 6771dcd5303ecaf57b4b3e17a04d5c12ce032262
   Nimble: 02a4990866e51868303a466970cd1c81bb84a192
   Quick: f57e9c1acc5ff48d2b04e23a17b4892eda5a3b09
 
