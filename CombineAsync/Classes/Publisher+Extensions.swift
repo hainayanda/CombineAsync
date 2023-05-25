@@ -66,6 +66,7 @@ extension Publisher {
             }
             return Just(recover)
         }
+        // swiftlint:disable:next force_cast
         .mapError { $0 as! Failure }
         .eraseToAnyPublisher()
         
