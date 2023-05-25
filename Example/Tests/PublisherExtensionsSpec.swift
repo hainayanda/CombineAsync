@@ -26,19 +26,19 @@ class PublisherExtensionsAsyncSpec: AsyncSpec {
                 }
                 it("should successfully return value") {
                     subject.sendAfter(0.1, input: 10_000)
-                    await expect { try await subject.asynchronously() }.to(equal(10_000))
+                    await expect { try await subject.sinkAsynchronously() }.to(equal(10_000))
                 }
                 it("should throw expected error") {
                     subject.sendAfter(0.1, completion: .failure(.expectedError))
-                    await expect { try await subject.asynchronously() }.to(throwError(TestError.expectedError))
+                    await expect { try await subject.sinkAsynchronously() }.to(throwError(TestError.expectedError))
                 }
                 it("should throw no value error") {
                     subject.sendAfter(0.1, completion: .finished)
-                    await expect { try await subject.asynchronously() }.to(throwError(PublisherToAsyncError.finishedButNoValue))
+                    await expect { try await subject.sinkAsynchronously() }.to(throwError(PublisherToAsyncError.finishedButNoValue))
                 }
                 it("should throw timeout error") {
                     subject.sendAfter(0.2, input: 10_000)
-                    await expect { try await subject.asynchronously(timeout: 0.1) }.to(throwError(PublisherToAsyncError.timeout))
+                    await expect { try await subject.sinkAsynchronously(timeout: 0.1) }.to(throwError(PublisherToAsyncError.timeout))
                 }
             }
             context("without error") {
@@ -51,15 +51,15 @@ class PublisherExtensionsAsyncSpec: AsyncSpec {
                 }
                 it("should successfully return value") {
                     subject.sendAfter(0.1, input: 10_000)
-                    await expect { await subject.asynchronously() }.to(equal(10_000))
+                    await expect { await subject.sinkAsynchronously() }.to(equal(10_000))
                 }
                 it("should ignore no value error") {
                     subject.sendAfter(0.1, completion: .finished)
-                    await expect { await subject.asynchronously() }.to(beNil())
+                    await expect { await subject.sinkAsynchronously() }.to(beNil())
                 }
                 it("should ignore timeout error") {
                     subject.sendAfter(0.2, input: 10_000)
-                    await expect { await subject.asynchronously(timeout: 0.1) }.to(beNil())
+                    await expect { await subject.sinkAsynchronously(timeout: 0.1) }.to(beNil())
                 }
             }
         }
@@ -100,13 +100,13 @@ class PublisherExtensionsSyncSpec: QuickSpec {
             context("recover on error") {
                 it("should successfully return value") {
                     subject.sendAfter(0.1, input: 10_000)
-                    cancellable = subject.recoverOnError { _ in -1 }
+                    cancellable = subject.replaceError { _ in -1 }
                         .sinkTest(for: result)
                     expect(result.wrapped).toEventually(equal(.success(10_000)))
                 }
                 it("should replace the error") {
                     subject.sendAfter(0.1, completion: .failure(.expectedError))
-                    cancellable = subject.recoverOnError { _ in -1 }
+                    cancellable = subject.replaceError { _ in -1 }
                         .sinkTest(for: result)
                     expect(result.wrapped).toEventually(equal(.success(-1)))
                 }
@@ -114,19 +114,19 @@ class PublisherExtensionsSyncSpec: QuickSpec {
             context("recover on error if needed") {
                 it("should successfully return value") {
                     subject.sendAfter(0.1, input: 10_000)
-                    cancellable = subject.recoverOnErrorIfNeeded { _ in -1 }
+                    cancellable = subject.replaceErrorIfNeeded { _ in -1 }
                         .sinkTest(for: result)
                     expect(result.wrapped).toEventually(equal(.success(10_000)))
                 }
                 it("should replace the error if needed") {
                     subject.sendAfter(0.1, completion: .failure(.expectedError))
-                    cancellable = subject.recoverOnErrorIfNeeded { _ in -1 }
+                    cancellable = subject.replaceErrorIfNeeded { _ in -1 }
                         .sinkTest(for: result)
                     expect(result.wrapped).toEventually(equal(.success(-1)))
                 }
                 it("should not replace the error") {
                     subject.sendAfter(0.1, completion: .failure(.expectedError))
-                    cancellable = subject.recoverOnErrorIfNeeded { _ in nil }
+                    cancellable = subject.replaceErrorIfNeeded { _ in nil }
                         .sinkTest(for: result)
                     expect(result.wrapped).toEventually(equal(.failure(.expectedError)))
                 }
