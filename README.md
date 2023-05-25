@@ -1,6 +1,6 @@
 # CombineAsync
 
-CombineAsync is a Combine extensions and utilities for async task
+CombineAsync is Combine extensions and utilities for an async task
 
 [![CI Status](https://img.shields.io/travis/hainayanda/CombineAsync.svg?style=flat)](https://travis-ci.org/hainayanda/CombineAsync)
 [![Version](https://img.shields.io/cocoapods/v/CombineAsync.svg?style=flat)](https://cocoapods.org/pods/CombineAsync)
@@ -62,11 +62,11 @@ CombineAsync is available under the MIT license. See the LICENSE file for more i
 
 ## Usage
 
-`CombineAsync` contains of several extensions that can be used when working with `Combine` and Swift async
+`CombineAsync` contains several extensions that can be used when working with `Combine` and Swift async
 
-###  Publisher to Async
+### Publisher to Async
 
-You can convert any object that implement `Publisher` into Swift async with a single call:
+You can convert any object that implements `Publisher` into Swift async with a single call:
 
 ```swift
 let result = await publisher.sinkAsynchronously()
@@ -75,16 +75,16 @@ let result = await publisher.sinkAsynchronously()
 let timedResult = await publisher.sinkAsynchronously(timeout: 1)
 ```
 
-it will produce `PublisherToAsyncError` if error happens in the conversion. The error are:
+it will produce `PublisherToAsyncError` if an error happens in the conversion. The errors are:
 - `finishedButNoValue`
 - `timeout`
 - `failToProduceAnOutput`
 
-other than those errors, it will rethrows the error produced by the original `Publisher`
+other than those errors, it will rethrow the error produced by the original `Publisher`
 
-### Sequence of Publisher to array
+### Sequence of Publisher to an array of output
 
-Similar with `Publisher` to async, any sequence of `Publisher` can be converted to aync too with a single call:
+Similar to `Publisher` to async, any sequence of `Publisher` can be converted to async too with a single call:
 
 ```swift
 let results = await arrayOfPublishers.sinkAsynchronously()
@@ -95,7 +95,7 @@ let timedResults = await arrayOfPublishers.sinkAsynchronously(timeout: 1)
 
 ### Future from async
 
-You can convert Swift async to `Future` object with provided convenience init:
+You can convert Swift async to a `Future` object with provided convenience init:
 
 ```swift
 let future = Future { 
@@ -105,7 +105,7 @@ let future = Future {
 
 ### Publisher error recovery
 
-`CombineAsync` give you the way to recover from error using 3 other methods:
+`CombineAsync` gives you a way to recover from errors using 3 other methods:
 
 ```swift
 // will ignore error and produce AnyPublisher<Output, Never>
@@ -119,23 +119,23 @@ publisher.replaceError { error in convertErrorToOutput(error) }
 publisher.replaceErrorIfNeeded { error in convertErrorToOutputIfNeeded(error) }
 ```
 
-Its similar with `replaceError`, but accept a closure instead of just single output
+It's similar to `replaceError`, but accepts a closure instead of just single output
 
-### Sequence of Publisher to single Publisher
+### Sequence of Publisher to a single Publisher
 
-`CombineAsync` give you a shortcut to merge sequence of `Publisher` into a single `Publisher` that emit an array of output with a single call:
+`CombineAsync` give you a shortcut to merge a sequence of `Publisher` into a single `Publisher` that emits an array of output with a single call:
 
 ```swift
-// will collect all the emitted element from all publishers
+// will collect all the emitted elements from all publishers
 let allElementsEmittedPublisher = arrayOfPublishers.merged()
 
-// will collect only the first the emitted element from all publishers
+// will collect only the first emitted element from all publishers
 let firstElementsEmittedPublisher = arrayOfPublishers.mergedFirsts()
 ```
 
 ### Asynchronous Map
 
-`CombineAsync` give you ability to map using an async mapper. it will run all the mapping parallel and collect the results while maintaining the original order:
+`CombineAsync` gives you the ability to map using an async mapper. it will run all the mapping parallel and collect the results while maintaining the original order:
 
 ```swift
 // map
