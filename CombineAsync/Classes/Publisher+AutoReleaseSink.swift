@@ -9,7 +9,7 @@ import Foundation
 import Combine
 import Retain
 
-public protocol RetainStateCancellable: Cancellable {
+public protocol RetainStateCancellable: Cancellable, DeallocateObservable {
     var state: RetainState { get }
     func eraseToAnyCancellable() -> AnyCancellable
 }
@@ -19,15 +19,13 @@ public enum RetainState {
     case released
 }
 
-public struct AutoReleaseCancellable: RetainStateCancellable {
+public class AutoReleaseCancellable: RetainStateCancellable {
     
-    weak var cancellable: AnyCancellable?
-    weak var timer: Timer?
+    @WeakSubject var cancellable: AnyCancellable?
     var cancelTask: (() -> Void)?
     
-    init(cancellable: AnyCancellable?, timer: Timer?, cancelTask: (() -> Void)?) {
+    init(cancellable: AnyCancellable?, cancelTask: (() -> Void)?) {
         self.cancellable = cancellable
-        self.timer = timer
         self.cancelTask = cancelTask
     }
     
@@ -40,6 +38,13 @@ public struct AutoReleaseCancellable: RetainStateCancellable {
     public func eraseToAnyCancellable() -> AnyCancellable {
         AnyCancellable(self)
     }
+    
+    public var deallocatePublisher: AnyPublisher<Void, Never> { $cancellable.deallocatePublisher }
+    
+    public func whenDeallocate(do operation: @escaping () -> Void) -> AnyCancellable {
+        $cancellable.whenDeallocate(do: operation)
+    }
+    
 }
 
 extension Publisher {
