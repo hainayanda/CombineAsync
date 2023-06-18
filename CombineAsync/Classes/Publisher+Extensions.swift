@@ -49,8 +49,7 @@ extension Publisher {
     public func replaceError(with recovery: @escaping (Failure) -> Output) -> Infallible<Output> {
         self.catch { error in
             Just(recovery(error))
-        }
-        .eraseToAnyPublisher()
+        }.eraseToAnyPublisher()
     }
     
     /// Return new publisher that can recover from error by using a closure that will return new output if needed when error occurs
@@ -70,33 +69,29 @@ extension Publisher {
     
     // MARK: Internal methods
     
-    func sinkAsyncWithNoTimeout() async throws -> Self.Output {
-        return try await withCheckedThrowingContinuation { continuation in
-            var cancellable: AnyCancellable?
+    func autoReleaseSinkAsync(timeout: TimeInterval) async throws -> Self.Output {
+        try await withCheckedThrowingContinuation { continuation in
             var valueReceived = false
-            cancellable = first()
-                .sink { result in
-                    switch result {
-                    case .finished:
-                        if !valueReceived {
-                            continuation.resume(throwing: PublisherToAsyncError.finishedButNoValue)
-                        }
-                    case let .failure(error):
-                        continuation.resume(throwing: error)
+            first().autoReleaseSink(timeout: timeout) { result in
+                switch result {
+                case .finished:
+                    if !valueReceived {
+                        continuation.resume(throwing: PublisherToAsyncError.finishedButNoValue)
                     }
-                    cancellable?.cancel()
-                    cancellable = nil
-                } receiveValue: { value in
-                    valueReceived = true
-                    continuation.resume(returning: value)
+                case let .failure(error):
+                    continuation.resume(throwing: error)
                 }
+            } receiveValue: { value in
+                valueReceived = true
+                continuation.resume(returning: value)
+            }
         }
     }
     
     func sinkAsync(with timeout: TimeInterval) async throws -> Self.Output {
-        return try await withThrowingTaskGroup(of: Output.self) { group in
+        try await withThrowingTaskGroup(of: Output.self) { group in
             group.addTask {
-                try await sinkAsyncWithNoTimeout()
+                try await autoReleaseSinkAsync(timeout: timeout)
             }
             group.addTask {
                 try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))

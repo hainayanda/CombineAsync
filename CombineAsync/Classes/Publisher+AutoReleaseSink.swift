@@ -24,12 +24,12 @@ public class AutoReleaseCancellable: RetainStateCancellable {
     @WeakSubject var cancellable: AnyCancellable?
     var cancelTask: (() -> Void)?
     
+    public var state: RetainState { cancellable == nil ? .released: .retained }
+    
     init(cancellable: AnyCancellable?, cancelTask: (() -> Void)?) {
         self.cancellable = cancellable
         self.cancelTask = cancelTask
     }
-    
-    public var state: RetainState { cancellable == nil ? .released: .retained }
     
     public func cancel() {
         cancelTask?()
@@ -65,10 +65,13 @@ extension Publisher {
         receiveValue: @escaping ((Output) -> Void)) -> RetainStateCancellable {
             var cancellable: AnyCancellable?
             var deallocateCancellable: AnyCancellable?
+            var timerCancellable: AnyCancellable?
             func release() {
                 deallocateCancellable?.cancel()
+                timerCancellable?.cancel()
                 cancellable?.cancel()
                 deallocateCancellable = nil
+                timerCancellable = nil
                 cancellable = nil
             }
             cancellable = sink { completion in
@@ -80,9 +83,11 @@ extension Publisher {
             deallocateCancellable = deallocatePublisher(of: object)
                 .sink(receiveValue: release)
             if let timeout = timeout {
-                DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
-                    release()
-                }
+                timerCancellable = Timer.publish(every: timeout, on: .main, in: .common)
+                    .autoconnect()
+                    .sink { _ in
+                        release()
+                    }
             }
             return AutoReleaseCancellable(cancellable: cancellable, cancelTask: release)
         }
@@ -100,8 +105,11 @@ extension Publisher {
         receiveCompletion: @escaping ((Subscribers.Completion<Failure>) -> Void),
         receiveValue: @escaping ((Output) -> Void)) -> RetainStateCancellable {
             var cancellable: AnyCancellable?
+            var timerCancellable: AnyCancellable?
             func release() {
+                timerCancellable?.cancel()
                 cancellable?.cancel()
+                timerCancellable = nil
                 cancellable = nil
             }
             cancellable = sink { completion in
@@ -110,9 +118,11 @@ extension Publisher {
             } receiveValue: { value in
                 receiveValue(value)
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + timeout, qos: .background, flags: .detached) {
-                release()
-            }
+            timerCancellable = Timer.publish(every: timeout, on: .current, in: .common)
+                .autoconnect()
+                .sink { _ in
+                    release()
+                }
             return AutoReleaseCancellable(cancellable: cancellable, cancelTask: release)
         }
 }
