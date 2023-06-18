@@ -76,9 +76,10 @@ CombineAsync is available under the MIT license. See the LICENSE file for more i
 You can convert any object that implements `Publisher` into Swift async with a single call:
 
 ```swift
+// implicitly await with 30 second timeout
 let result = await publisher.sinkAsynchronously()
 
-// or with timeout
+// or with timeout explicitly
 let timedResult = await publisher.sinkAsynchronously(timeout: 1)
 ```
 
@@ -122,6 +123,8 @@ publisher.autoReleaseSink { _ in
 }
 ```
 
+By default, it will auto release the closure after 30 seconds.
+
 If you want the closure to be released whenever some object is released, just pass the object:
 
 ```swift
@@ -135,7 +138,7 @@ publisher.autoReleaseSink(retainedTo: self) { _ in
 If you want the closure to be released using a timeout, just pass the timeout:
 
 ```swift
-publisher.autoReleaseSink(timeout: 30) { _ in
+publisher.autoReleaseSink(timeout: 60) { _ in
     // do something on completed
 } receiveValue: { 
     // do something on receive value
@@ -145,8 +148,8 @@ publisher.autoReleaseSink(timeout: 30) { _ in
 Whatever you pass, it will try to release the closure whenever one of the conditions is met:
 
 ```swift
-// the closure will be released after completion, or 30 second, or when self is released.
-publisher.autoReleaseSink(retainedTo: self, timeout: 30) { _ in
+// the closure will be released after completion, or 60 second, or when self is released.
+publisher.autoReleaseSink(retainedTo: self, timeout: 60) { _ in
     // do something on completed
 } receiveValue: { 
     // do something on receive value
