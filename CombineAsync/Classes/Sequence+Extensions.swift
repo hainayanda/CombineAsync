@@ -52,11 +52,11 @@ extension Sequence {
     /// It will run asynchronously and throwing error if one of the element is failing in the given async closure.
     /// It will still retain the original order of the element regardless of the order of mapping time completion
     /// - Parameters:
-    ///   - timeout: timeout in second
+    ///   - timeout: timeout in second, by default 30 seconds
     ///   - mapper: A mapping async closure. `mapper` accepts an element of this sequence as its parameter
     ///             and returns a transformed value of the same or of a different type asynchronously.
     /// - Returns: An array containing the transformed elements of this sequence
-    public func asyncMap<Mapped>(timeout: TimeInterval = 0, _ mapper: @escaping (Element) async throws -> Mapped) async throws -> [Mapped] {
+    public func asyncMap<Mapped>(timeout: TimeInterval = 30, _ mapper: @escaping (Element) async throws -> Mapped) async throws -> [Mapped] {
         try await convertToIndexedFutures(mapper)
             .sinkAsynchronously(timeout: timeout)
             .sorted { $0.index < $1.index }
@@ -68,11 +68,11 @@ extension Sequence {
     /// It will run asynchronously and throwing error if one of the element is failing in the given async closure.
     /// It will still retain the original order of the element regardless of the order of mapping time completion
     /// - Parameters:
-    ///   - timeout: timeout in second
+    ///   - timeout: timeout in second, by default 30 seconds
     ///   - mapper: A mapping async closure. `mapper` accepts an element of this sequence as its parameter
     ///             and returns an optional transformed value of the same or of a different type asynchronously.
     /// - Returns: An array containing the transformed elements of this sequence
-    public func asyncCompactMap<Mapped>(timeout: TimeInterval = 0, _ mapper: @escaping (Element) async throws -> Mapped?) async throws -> [Mapped] {
+    public func asyncCompactMap<Mapped>(timeout: TimeInterval = 30, _ mapper: @escaping (Element) async throws -> Mapped?) async throws -> [Mapped] {
         try await convertToIndexedFutures(mapper)
             .sinkAsynchronously(timeout: timeout)
             .sorted { $0.index < $1.index }
