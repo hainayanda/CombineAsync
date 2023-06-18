@@ -56,7 +56,7 @@ class PublisherAutoReleaseSpec: QuickSpec {
             var retaining: RetainingObject? = RetainingObject()
             var completion: Subscribers.Completion<TestError>?
             var value: Int?
-            let cancellable = subject.autoReleaseSink(retainedTo: retaining) { comp in
+            let cancellable = subject.autoReleaseSink(retainedTo: retaining!) { comp in
                 completion = comp
             } receiveValue: { val in
                 value = val

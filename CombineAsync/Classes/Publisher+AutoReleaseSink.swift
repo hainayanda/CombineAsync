@@ -9,7 +9,7 @@ import Foundation
 import Combine
 import Retain
 
-public protocol RetainStateCancellable: Cancellable {
+public protocol RetainStateCancellable: Cancellable, DeallocateObservable {
     var state: RetainState { get }
     func eraseToAnyCancellable() -> AnyCancellable
 }
@@ -19,15 +19,13 @@ public enum RetainState {
     case released
 }
 
-public struct AutoReleaseCancellable: RetainStateCancellable {
+public class AutoReleaseCancellable: RetainStateCancellable {
     
-    weak var cancellable: AnyCancellable?
-    weak var timer: Timer?
+    @WeakSubject var cancellable: AnyCancellable?
     var cancelTask: (() -> Void)?
     
-    init(cancellable: AnyCancellable?, timer: Timer?, cancelTask: (() -> Void)?) {
+    init(cancellable: AnyCancellable?, cancelTask: (() -> Void)?) {
         self.cancellable = cancellable
-        self.timer = timer
         self.cancelTask = cancelTask
     }
     
@@ -40,13 +38,20 @@ public struct AutoReleaseCancellable: RetainStateCancellable {
     public func eraseToAnyCancellable() -> AnyCancellable {
         AnyCancellable(self)
     }
+    
+    public var deallocatePublisher: AnyPublisher<Void, Never> { $cancellable.deallocatePublisher }
+    
+    public func whenDeallocate(do operation: @escaping () -> Void) -> AnyCancellable {
+        $cancellable.whenDeallocate(do: operation)
+    }
+    
 }
 
 extension Publisher {
     
     @discardableResult
-    /// Sink while ignoring the cancellable. The cancellable then will be retained by the subscriber, timeout if given and object if given,
-    /// and will be released when the publisher emit completion or when the given timeout has been reach  or the when the given object is being released, whichever happens first
+    /// Sink while ignoring the cancellable. The cancellable then will be retained by the subscriber, timeout if given and object,
+    /// and will be released when the publisher emit completion or when the given timeout has been reach  or when the given object is being released, whichever happens first
     /// - Parameters:
     ///   - object: object where the cancellable will be retained to
     ///   - timeout: object where the cancellable will be retained to
@@ -54,15 +59,48 @@ extension Publisher {
     ///   - receiveValue: The closure to execute on receipt of a value.
     /// - Returns: AutoReleaseCancellable
     public func autoReleaseSink(
-        retainedTo object: AnyObject? = nil,
+        retainedTo object: AnyObject,
         timeout: TimeInterval? = nil,
         receiveCompletion: @escaping ((Subscribers.Completion<Failure>) -> Void),
         receiveValue: @escaping ((Output) -> Void)) -> RetainStateCancellable {
             var cancellable: AnyCancellable?
-            var timer: Timer?
+            var deallocateCancellable: AnyCancellable?
             func release() {
-                timer?.invalidate()
-                timer = nil
+                deallocateCancellable?.cancel()
+                cancellable?.cancel()
+                deallocateCancellable = nil
+                cancellable = nil
+            }
+            cancellable = sink { completion in
+                receiveCompletion(completion)
+                release()
+            } receiveValue: { value in
+                receiveValue(value)
+            }
+            deallocateCancellable = deallocatePublisher(of: object)
+                .sink(receiveValue: release)
+            if let timeout = timeout {
+                DispatchQueue.main.asyncAfter(deadline: .now() + timeout) {
+                    release()
+                }
+            }
+            return AutoReleaseCancellable(cancellable: cancellable, cancelTask: release)
+        }
+    
+    @discardableResult
+    /// Sink while ignoring the cancellable. The cancellable then will be retained by the subscriber and timeout,
+    /// and will be released when the publisher emit completion or when the timeout has been reach whichever happens first
+    /// - Parameters:
+    ///   - timeout: object where the cancellable will be retained to. Default value is 30 seconds
+    ///   - receiveCompletion: The closure to execute on completion.
+    ///   - receiveValue: The closure to execute on receipt of a value.
+    /// - Returns: AutoReleaseCancellable
+    public func autoReleaseSink(
+        timeout: TimeInterval = 30,
+        receiveCompletion: @escaping ((Subscribers.Completion<Failure>) -> Void),
+        receiveValue: @escaping ((Output) -> Void)) -> RetainStateCancellable {
+            var cancellable: AnyCancellable?
+            func release() {
                 cancellable?.cancel()
                 cancellable = nil
             }
@@ -72,34 +110,40 @@ extension Publisher {
             } receiveValue: { value in
                 receiveValue(value)
             }
-            if let object {
-                deallocatePublisher(of: object).autoReleaseSink(timeout: timeout) {
-                    release()
-                }
+            DispatchQueue.main.asyncAfter(deadline: .now() + timeout, qos: .background, flags: .detached) {
+                release()
             }
-            if let timeout = timeout {
-                timer = Timer.scheduledTimer(withTimeInterval: timeout, repeats: false) { _ in
-                    release()
-                }
-            }
-            return AutoReleaseCancellable(cancellable: cancellable, timer: timer, cancelTask: release)
+            return AutoReleaseCancellable(cancellable: cancellable, cancelTask: release)
         }
 }
 
 extension Publisher where Failure == Never {
     
     @discardableResult
-    /// Sink while ignoring the cancellable. The cancellable then will be retained by the subscriber, timeout if given and object if given,
-    /// and will be released when the publisher emit completion or when the given timeout has been reach  or the when the given object is being released, whichever happens first
+    /// Sink while ignoring the cancellable. The cancellable then will be retained by the subscriber, timeout if given and object,
+    /// and will be released when the publisher emit completion or when the given timeout has been reach  or when the given object is being released, whichever happens first
     /// - Parameters:
     ///   - object: object where the cancellable will be retained to
     ///   - timeout: object where the cancellable will be retained to
     ///   - receiveValue: The closure to execute on receipt of a value.
     /// - Returns: AutoReleaseCancellable
     public func autoReleaseSink(
-        retainedTo object: AnyObject? = nil,
+        retainedTo object: AnyObject,
         timeout: TimeInterval? = nil,
         receiveValue: @escaping ((Output) -> Void)) -> RetainStateCancellable {
-            autoReleaseSink(retainedTo: object, receiveCompletion: { _ in }, receiveValue: receiveValue)
+            autoReleaseSink(retainedTo: object, timeout: timeout, receiveCompletion: { _ in }, receiveValue: receiveValue)
+        }
+    
+    @discardableResult
+    /// Sink while ignoring the cancellable. The cancellable then will be retained by the subscriber and timeout,
+    /// and will be released when the publisher emit completion or when the timeout has been reach whichever happens first
+    /// - Parameters:
+    ///   - timeout: object where the cancellable will be retained to. Default value is 30 seconds
+    ///   - receiveValue: The closure to execute on receipt of a value.
+    /// - Returns: AutoReleaseCancellable
+    public func autoReleaseSink(
+        timeout: TimeInterval = 30,
+        receiveValue: @escaping ((Output) -> Void)) -> RetainStateCancellable {
+            autoReleaseSink(timeout: timeout, receiveCompletion: { _ in }, receiveValue: receiveValue)
         }
 }
