@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "Retain",
+        "repositoryURL": "https://github.com/hainayanda/Retain.git",
+        "state": {
+          "branch": null,
+          "revision": "faadd0f2d903b49ce25a95b8dac00fee2fc2431d",
+          "version": "1.0.1"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
