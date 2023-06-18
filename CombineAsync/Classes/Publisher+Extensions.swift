@@ -21,12 +21,9 @@ extension Publisher {
     /// and throw error if its finished without value
     /// or reach timeout
     /// or fail to produce an output
-    /// - Parameter timeout: timeout in second
+    /// - Parameter timeout: timeout in second, by default is 30 seconds
     /// - Returns: first output
-    public func sinkAsynchronously(timeout: TimeInterval = 0) async throws -> Output {
-        guard timeout > 0 else {
-            return try await sinkAsyncWithNoTimeout()
-        }
+    public func sinkAsynchronously(timeout: TimeInterval = 30) async throws -> Output {
         return try await sinkAsync(with: timeout)
     }
     
@@ -88,6 +85,7 @@ extension Publisher {
                         continuation.resume(throwing: error)
                     }
                     cancellable?.cancel()
+                    cancellable = nil
                 } receiveValue: { value in
                     valueReceived = true
                     continuation.resume(returning: value)
@@ -98,7 +96,7 @@ extension Publisher {
     func sinkAsync(with timeout: TimeInterval) async throws -> Self.Output {
         return try await withThrowingTaskGroup(of: Output.self) { group in
             group.addTask {
-                try await sinkAsynchronously()
+                try await sinkAsyncWithNoTimeout()
             }
             group.addTask {
                 try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
@@ -116,12 +114,9 @@ extension Publisher {
 extension Publisher where Failure == Never {
     
     /// Return this publisher first output asynchronously and return nil if its finished without value
-    /// - Parameter timeout: timeout in second
+    /// - Parameter timeout: timeout in second, by default is 30 seconds
     /// - Returns: first output
-    public func sinkAsynchronously(timeout: TimeInterval = 0) async -> Output? {
-        guard timeout > 0 else {
-            return try? await sinkAsyncWithNoTimeout()
-        }
+    public func sinkAsynchronously(timeout: TimeInterval = 30) async -> Output? {
         return try? await sinkAsync(with: timeout)
     }
 }
