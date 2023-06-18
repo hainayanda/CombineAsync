@@ -8,7 +8,8 @@ let package = Package(
     platforms: [
         .iOS(.v13),
         .macOS(.v10_15),
-        .tvOS(.v13)
+        .tvOS(.v13),
+        .watchOS(.v8)
     ],
     products: [
         .library(
@@ -17,6 +18,7 @@ let package = Package(
         )
     ],
     dependencies: [
+        .package(url: "https://github.com/hainayanda/Retain.git", from: "1.0.1"),
         // uncomment code below to test
 //        .package(url: "https://github.com/Quick/Quick.git", from: "7.0.0"),
 //        .package(url: "https://github.com/Quick/Nimble.git", from: "12.0.0")
@@ -24,7 +26,7 @@ let package = Package(
     targets: [
         .target(
             name: "CombineAsync",
-            dependencies: [],
+            dependencies: ["Retain"],
             path: "CombineAsync/Classes"
         ),
         // uncomment code below to test

@@ -1,7 +1,9 @@
 PODS:
-  - CombineAsync (1.0.0)
+  - CombineAsync (1.0.3):
+    - Retain (~> 1.0.1)
   - Nimble (12.0.0)
   - Quick (7.0.0)
+  - Retain (1.0.1)
 
 DEPENDENCIES:
   - CombineAsync (from `../`)
@@ -12,15 +14,17 @@ SPEC REPOS:
   trunk:
     - Nimble
     - Quick
+    - Retain
 
 EXTERNAL SOURCES:
   CombineAsync:
     :path: "../"
 
 SPEC CHECKSUMS:
-  CombineAsync: 6771dcd5303ecaf57b4b3e17a04d5c12ce032262
+  CombineAsync: 2091f0cd7bda3e68434f6734f2ee3872dd1099a2
   Nimble: 02a4990866e51868303a466970cd1c81bb84a192
   Quick: f57e9c1acc5ff48d2b04e23a17b4892eda5a3b09
+  Retain: 539b7c04ff369886c7e633ef1a76d0d1b11466db
 
 PODFILE CHECKSUM: 7111cabbd510e4fb32823edb28f2d28dbcbf4418
 

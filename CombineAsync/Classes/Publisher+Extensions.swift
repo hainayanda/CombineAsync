@@ -69,7 +69,6 @@ extension Publisher {
         // swiftlint:disable:next force_cast
         .mapError { $0 as! Failure }
         .eraseToAnyPublisher()
-        
     }
     
     // MARK: Internal methods

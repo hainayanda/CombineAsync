@@ -18,8 +18,8 @@ To run the example project, clone the repo, and run `pod install` from the Examp
 
 - Swift 5.5 or higher
 - iOS 13.0 or higher
-- MacOS 10.15 or higher (SPM Only)
-- TVOS 13.0 or higer (SPM Only)
+- MacOS 10.15 or higher
+- TVOS 13.0 or higer
 - XCode 13 or higher
 
 ## Installation
@@ -58,6 +58,8 @@ Use it in your target as a `CombineAsync`
     dependencies: ["CombineAsync"]
 )
 ```
+
+## Author
 
 hainayanda, hainayanda@outlook.com
 
@@ -105,6 +107,72 @@ You can convert Swift async to a `Future` object with provided convenience init:
 ```swift
 let future = Future { 
     try await getSomethingAsync()
+}
+```
+
+### Auto Release Sink
+
+You can ignore the cancellable and expect that the closure will be removed on completion by using `autoReleaseSink`:
+
+```swift
+publisher.autoReleaseSink { _ in
+    // do something on completed
+} receiveValue: { 
+    // do something to receive value
+}
+```
+
+If you want the closure to be released whenever some object is released, just pass the object:
+
+```swift
+publisher.autoReleaseSink(retainedTo: self) { _ in
+    // do something on completed
+} receiveValue: { 
+    // do something on receive value
+}
+```
+
+If you want the closure to be released using a timeout, just pass the timeout:
+
+```swift
+publisher.autoReleaseSink(timeout: 30) { _ in
+    // do something on completed
+} receiveValue: { 
+    // do something on receive value
+}
+```
+
+Whatever you pass, it will try to release the closure whenever one of the conditions is met:
+
+```swift
+// the closure will be released after completion, or 30 second, or when self is released.
+publisher.autoReleaseSink(retainedTo: self, timeout: 30) { _ in
+    // do something on completed
+} receiveValue: { 
+    // do something on receive value
+}
+```
+
+If you need to release it manually, the method return `RetainStateCancellable` object, which is a Cancellable that has a RetainState so you could know whether the closure is already released or not:
+
+```swift
+// the closure will be released after completion or 30 seconds, or when the self is released.
+let retainCancellable = publisher.autoReleaseSink(retainedTo: self, timeout: 30) { _ in
+    // do something on completed
+} receiveValue: { 
+    // do something on receive value
+}
+
+let typeErased = retainCancellable.eraseToAnyCancellable()
+
+...
+...
+
+switch retainCancellable.state { 
+    case .retained: 
+    print("closure still retained")
+    case .released: 
+    print("closure already released")
 }
 ```
 

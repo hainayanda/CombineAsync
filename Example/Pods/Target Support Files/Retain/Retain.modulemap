@@ -1,0 +1,6 @@
+framework module Retain {
+  umbrella header "Retain-umbrella.h"
+
+  export *
+  module * { export * }
+}
