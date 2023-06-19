@@ -83,7 +83,7 @@ extension Publisher {
             deallocateCancellable = deallocatePublisher(of: object)
                 .sink(receiveValue: release)
             if let timeout = timeout {
-                timerCancellable = Timer.publish(every: timeout, on: .main, in: .common)
+                timerCancellable = Timer.publish(every: timeout, on: .current, in: .common)
                     .autoconnect()
                     .sink { _ in
                         release()
