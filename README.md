@@ -31,14 +31,14 @@ CombineAsync is available through [CocoaPods](https://cocoapods.org). To install
 it, simply add the following line to your Podfile:
 
 ```ruby
-pod 'CombineAsync', '~> 1.1.2'
+pod 'CombineAsync', '~> 1.1.3'
 ```
 
 ### Swift Package Manager from XCode
 
 - Add it using XCode menu **File > Swift Package > Add Package Dependency**
 - Add **<https://github.com/hainayanda/CombineAsync.git>** as Swift Package URL
-- Set rules at **version**, with **Up to Next Major** option and put **1.1.2** as its version
+- Set rules at **version**, with **Up to Next Major** option and put **1.1.3** as its version
 - Click next and wait
 
 ### Swift Package Manager from Package.swift
@@ -47,7 +47,7 @@ Add as your target dependency in **Package.swift**
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/hainayanda/CombineAsync.git", .upToNextMajor(from: "1.1.2"))
+    .package(url: "https://github.com/hainayanda/CombineAsync.git", .upToNextMajor(from: "1.1.3"))
 ]
 ```
 
