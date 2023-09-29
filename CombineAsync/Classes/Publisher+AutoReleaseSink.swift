@@ -35,7 +35,7 @@ public class AutoReleaseCancellable: RetainStateCancellable {
         cancelTask?()
     }
     
-    public func eraseToAnyCancellable() -> AnyCancellable {
+    @inlinable public func eraseToAnyCancellable() -> AnyCancellable {
         AnyCancellable(self)
     }
     
@@ -137,7 +137,7 @@ extension Publisher where Failure == Never {
     ///   - timeout: object where the cancellable will be retained to
     ///   - receiveValue: The closure to execute on receipt of a value.
     /// - Returns: AutoReleaseCancellable
-    public func autoReleaseSink(
+    @inlinable public func autoReleaseSink(
         retainedTo object: AnyObject,
         timeout: TimeInterval? = nil,
         receiveValue: @escaping ((Output) -> Void)) -> RetainStateCancellable {
@@ -151,7 +151,7 @@ extension Publisher where Failure == Never {
     ///   - timeout: object where the cancellable will be retained to. Default value is 30 seconds
     ///   - receiveValue: The closure to execute on receipt of a value.
     /// - Returns: AutoReleaseCancellable
-    public func autoReleaseSink(
+    @inlinable public func autoReleaseSink(
         timeout: TimeInterval = 30,
         receiveValue: @escaping ((Output) -> Void)) -> RetainStateCancellable {
             autoReleaseSink(timeout: timeout, receiveCompletion: { _ in }, receiveValue: receiveValue)

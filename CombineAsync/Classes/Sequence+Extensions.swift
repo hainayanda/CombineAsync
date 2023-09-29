@@ -17,13 +17,13 @@ extension Sequence where Element: Publisher {
     /// Return an array of the first results of each publisher asynchronously and throw PublisherToAsyncError.timeout if its reach timeout before produce an output
     /// - Parameter timeout: timeout in second
     /// - Returns: An array containing the first results of each publisher
-    public func sinkAsynchronously(timeout: TimeInterval = 0) async throws -> [Element.Output] {
+    @inlinable public func sinkAsynchronously(timeout: TimeInterval = 0) async throws -> [Element.Output] {
         try await mergedFirsts().sinkAsynchronously(timeout: timeout)
     }
     
     /// Collects all received elements, and emits a single array of the collection when the upstream publisher finishes.
     /// - Returns: A publisher that collects all received items and returns them as an array upon completion.
-    public func merged() -> AnyPublisher<[Element.Output], Element.Failure> {
+    @inlinable public func merged() -> AnyPublisher<[Element.Output], Element.Failure> {
         Publishers.MergeMany(self)
             .collect()
             .eraseToAnyPublisher()
@@ -31,7 +31,7 @@ extension Sequence where Element: Publisher {
     
     /// Collects all first received elements, and emits a single array of the collection when the upstream publisher finishes emit a first element.
     /// - Returns: A publisher that collects all received items and returns them as an array upon completion.
-    public func mergedFirsts() -> AnyPublisher<[Element.Output], Element.Failure> {
+    @inlinable public func mergedFirsts() -> AnyPublisher<[Element.Output], Element.Failure> {
         Publishers.MergeMany(self.map { $0.first() })
             .collect()
             .eraseToAnyPublisher()

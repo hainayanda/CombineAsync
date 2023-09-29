@@ -133,4 +133,5 @@ class PublisherExtensionsSyncSpec: QuickSpec {
             }
         }
     }
+    // swiftlint:enable function_body_length
 }
