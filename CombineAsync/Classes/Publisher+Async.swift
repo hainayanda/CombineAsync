@@ -36,15 +36,8 @@ extension Publisher {
     @inlinable public func asyncTryMap<T>(_ transform: @escaping (Output) async throws -> T) -> AnyPublisher<T, Error> {
         self.mapError { $0 }
             .flatMap { output in
-                Future { promise in
-                    Task {
-                        do {
-                            let result = try await transform(output)
-                            promise(.success(result))
-                        } catch {
-                            promise(.failure(error))
-                        }
-                    }
+                Future<T, Error> {
+                    try await transform(output)
                 }
             }
             .eraseToAnyPublisher()
@@ -56,12 +49,10 @@ extension Publisher {
     /// - Returns: A publisher that uses the provided closure to map elements from the upstream publisher to new elements that it then publishes.
     @inlinable public func asyncMap<T>(_ transform: @escaping (Output) async -> T) -> AnyPublisher<T, Failure> {
         self.flatMap { output in
-            Future { promise in
-                Task {
-                    let result = await transform(output)
-                    promise(.success(result))
-                }
+            Future<T, Never> {
+                await transform(output)
             }
+            .setFailureType(to: Failure.self)
         }
         .eraseToAnyPublisher()
     }
