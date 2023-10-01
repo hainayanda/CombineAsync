@@ -31,14 +31,14 @@ CombineAsync is available through [CocoaPods](https://cocoapods.org). To install
 it, simply add the following line to your Podfile:
 
 ```ruby
-pod 'CombineAsync', '~> 1.1.3'
+pod 'CombineAsync', '~> 1.2'
 ```
 
 ### Swift Package Manager from XCode
 
 - Add it using XCode menu **File > Swift Package > Add Package Dependency**
 - Add **<https://github.com/hainayanda/CombineAsync.git>** as Swift Package URL
-- Set rules at **version**, with **Up to Next Major** option and put **1.1.3** as its version
+- Set rules at **version**, with **Up to Next Major** option and put **1.2.0** as its version
 - Click next and wait
 
 ### Swift Package Manager from Package.swift
@@ -47,7 +47,7 @@ Add as your target dependency in **Package.swift**
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/hainayanda/CombineAsync.git", .upToNextMajor(from: "1.1.3"))
+    .package(url: "https://github.com/hainayanda/CombineAsync.git", .upToNextMajor(from: "1.2.0"))
 ]
 ```
 
@@ -112,14 +112,24 @@ let future = Future {
 }
 ```
 
+### Publisher Async Sink
+
+Sometimes your sink might execute something asynchronous and you really want to use await inside the sink without explicitly create a Task. This can be achieved by call `asyncSink`:
+
+```swift
+publisher.asyncSink { output in
+    await somethingAsync(output)
+}
+```
+
 ### Auto Release Sink
 
 You can ignore the cancellable and expect that the closure will be removed on completion by using `autoReleaseSink`:
 
 ```swift
-publisher.autoReleaseSink { _ in
+publisher.autoReleaseSink { completion in
     // do something on completed
-} receiveValue: { 
+} receiveValue: { output in
     // do something to receive value
 }
 ```
@@ -235,6 +245,50 @@ let futureMapped: AnyPublisher<[User], Error> = arrayOfID.futureMap { await getU
 // compact map
 let futureCompactMapped: AnyPublisher<[User], Error> = arrayOfID.futureCompactMap { await getUser(with: $0) }
 ```
+
+### Publisher Async Map
+
+If you need to use Publisher Map asynchronously, you can do it with `CombineAsync`:
+
+```swift
+publisher.asyncMap { output in
+    await convertOutputAsynchronously(output)
+}
+```
+
+There are some async map method you can use:
+- `asyncMap` which is equivalent with `map` but asynchronous
+- `asyncTryMap` which is equivalent with `tryMap` but asynchronous
+- `asyncCompactMap` which is equivalent with `compactMap` but asynchronous
+- `asyncTryCompactMap` which is equivalent with `tryCompactMap` but asynchronous
+
+### Publisher Map Sequence
+
+If you have the Publisher with Sequence as its Ouput and want to map each element without call map on the sequence output manually, `CombineAsync` give you the ability to bypass that:
+
+```swift
+myArrayPublisher.mapSequence { element in
+    // do map the element of the sequence to another type
+}
+```
+
+Those line of code are equivalent with:
+
+```swift
+myArrayPublisher.map { output in
+    output.map { element in
+        // do map the element of the sequence to another type
+    }
+}
+```
+
+All of the sequence mapper that you can use are:
+- `mapSequence(_:)` which  bypass `Sequence.map(_:)`
+- `compactMapSequence(_:)` which  bypass `Sequence.compactMap(_:)`
+- `tryMapSequence(_:)` which  bypass `Sequence.map(_:)` but with throwing mapper closure
+- `tryCompactMapSequence(_:)` which  bypass `Sequence.compactMap(_:)` but with throwing mapper closure
+- `asyncMapSequence(_:)` which  bypass `Sequence.asyncMap(_:)`
+- `asyncCompactMapSequence(_:)` which  bypass `Sequence.asyncCompactMap(_:)`
 
 ## Contribute
 
