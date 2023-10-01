@@ -17,7 +17,7 @@ extension Sequence where Element: Publisher {
     /// Return an array of the first results of each publisher asynchronously and throw PublisherToAsyncError.timeout if its reach timeout before produce an output
     /// - Parameter timeout: timeout in second
     /// - Returns: An array containing the first results of each publisher
-    @inlinable public func sinkAsynchronously(timeout: TimeInterval = 0) async throws -> [Element.Output] {
+    @inlinable public func sinkAsynchronously(timeout: TimeInterval) async throws -> [Element.Output] {
         try await mergedFirsts().sinkAsynchronously(timeout: timeout)
     }
     
@@ -52,11 +52,11 @@ extension Sequence {
     /// It will run asynchronously and throwing error if one of the element is failing in the given async closure.
     /// It will still retain the original order of the element regardless of the order of mapping time completion
     /// - Parameters:
-    ///   - timeout: timeout in second, by default 30 seconds
+    ///   - timeout: timeout in second
     ///   - mapper: A mapping async closure. `mapper` accepts an element of this sequence as its parameter
     ///             and returns a transformed value of the same or of a different type asynchronously.
     /// - Returns: An array containing the transformed elements of this sequence
-    public func asyncMap<Mapped>(timeout: TimeInterval = 30, _ mapper: @escaping (Element) async throws -> Mapped) async throws -> [Mapped] {
+    public func asyncMap<Mapped>(timeout: TimeInterval, _ mapper: @escaping (Element) async throws -> Mapped) async throws -> [Mapped] {
         try await convertToIndexedFutures(mapper)
             .sinkAsynchronously(timeout: timeout)
             .sorted { $0.index < $1.index }
@@ -68,11 +68,11 @@ extension Sequence {
     /// It will run asynchronously and throwing error if one of the element is failing in the given async closure.
     /// It will still retain the original order of the element regardless of the order of mapping time completion
     /// - Parameters:
-    ///   - timeout: timeout in second, by default 30 seconds
+    ///   - timeout: timeout in second
     ///   - mapper: A mapping async closure. `mapper` accepts an element of this sequence as its parameter
     ///             and returns an optional transformed value of the same or of a different type asynchronously.
     /// - Returns: An array containing the transformed elements of this sequence
-    public func asyncCompactMap<Mapped>(timeout: TimeInterval = 30, _ mapper: @escaping (Element) async throws -> Mapped?) async throws -> [Mapped] {
+    public func asyncCompactMap<Mapped>(timeout: TimeInterval, _ mapper: @escaping (Element) async throws -> Mapped?) async throws -> [Mapped] {
         try await convertToIndexedFutures(mapper)
             .sinkAsynchronously(timeout: timeout)
             .sorted { $0.index < $1.index }

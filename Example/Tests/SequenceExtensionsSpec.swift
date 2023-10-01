@@ -17,10 +17,10 @@ class SequenceExtensionsAsyncSpec: AsyncSpec {
     override class func spec() {
         let array = [1, 2, 3, 4, 5]
         it("should map array asynchronously") {
-            await expect { try await array.asyncMap(testMap(_:)) }.to(equal(["1", "2", "3", "4", "5"]))
+            await expect { try await array.asyncMap(timeout: 1, testMap(_:)) }.to(equal(["1", "2", "3", "4", "5"]))
         }
         it("should compact map array asynchronously") {
-            await expect { try await array.asyncCompactMap(testCompactMap(_:)) }.to(equal(["2", "4"]))
+            await expect { try await array.asyncCompactMap(timeout: 1, testCompactMap(_:)) }.to(equal(["2", "4"]))
         }
     }
 }
