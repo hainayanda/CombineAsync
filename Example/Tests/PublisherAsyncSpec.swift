@@ -23,7 +23,7 @@ class PublisherAsyncSpec: QuickSpec {
         }
         it("should sink asynchronously") {
             var sinkOutput: Int?
-            var input: Int = .random(in: -100..<100)
+            let input: Int = .random(in: -100..<100)
             waitUntil { done in
                 cancellable = subject.asyncSink { _ in } receiveValue: { output in
                     try await Task.sleep(nanoseconds: 10_000)
