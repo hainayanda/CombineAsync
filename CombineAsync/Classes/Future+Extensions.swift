@@ -12,7 +12,7 @@ extension Future where Failure == Error {
     
     /// Create a future object with generic error from asynchronous closure
     /// - Parameter asyncClosure: closure that run asynchronous code that produce an output
-    public convenience init(_ asyncClosure: @Sendable @escaping () async throws -> Output) {
+    @inlinable public convenience init(_ asyncClosure: @Sendable @escaping () async throws -> Output) {
         self.init { promise in
             Task {
                 do {
@@ -21,6 +21,20 @@ extension Future where Failure == Error {
                 } catch {
                     promise(.failure(error))
                 }
+            }
+        }
+    }
+}
+
+extension Future where Failure == Never {
+    
+    /// Create a future object with generic error from asynchronous closure
+    /// - Parameter asyncClosure: closure that run asynchronous code that produce an output
+    @inlinable public convenience init(_ asyncClosure: @Sendable @escaping () async -> Output) {
+        self.init { promise in
+            Task {
+                let result = await asyncClosure()
+                promise(.success(result))
             }
         }
     }

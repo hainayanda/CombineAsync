@@ -31,7 +31,7 @@ extension Publisher {
     /// - Returns: publisher that will never emit an error
     public func ignoreError() -> Infallible<Output> {
         map { Ignorable.passthrough($0) }
-            .replaceError(with: .ignore)
+            .catch { _ in Just(Ignorable.ignore) }
             .compactMap { ignorable in
                 switch ignorable {
                 case .passthrough(let output):
@@ -46,7 +46,7 @@ extension Publisher {
     /// Return new publisher that can recover from error by using a closure that will return new output when error occurs
     /// - Parameter recovery: A closure that accept failure and return output as its replacement
     /// - Returns: publisher that will never emit an error
-    public func replaceError(with recovery: @escaping (Failure) -> Output) -> Infallible<Output> {
+    @inlinable public func replaceError(with recovery: @escaping (Failure) -> Output) -> Infallible<Output> {
         self.catch { error in
             Just(recovery(error))
         }.eraseToAnyPublisher()
@@ -55,7 +55,7 @@ extension Publisher {
     /// Return new publisher that can recover from error by using a closure that will return new output if needed when error occurs
     /// - Parameter recovery: A closure that accept failure and return output as its replacement. It will pass through the error if the output is nil.
     /// - Returns: publisher with the same type
-    public func replaceErrorIfNeeded(with recovery: @escaping (Failure) -> Output?) -> AnyPublisher<Output, Failure> {
+    @inlinable public func replaceErrorIfNeeded(with recovery: @escaping (Failure) -> Output?) -> AnyPublisher<Output, Failure> {
         tryCatch { error in
             guard let recover = recovery(error) else {
                 throw error
