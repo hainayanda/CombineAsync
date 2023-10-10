@@ -1,6 +1,6 @@
 # CombineAsync
 
-CombineAsync is Combine extensions and utilities for an async task
+CombineAsync is a collection of Combine extensions and utilities designed for asynchronous tasks.
 
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/d07d496defc943ad90e96fde91a55e65)](https://app.codacy.com/gh/hainayanda/CombineAsync/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 ![build](https://github.com/hainayanda/CombineAsync/workflows/build/badge.svg)
@@ -21,29 +21,30 @@ To run the example project, clone the repo, and run `pod install` from the Examp
 - MacOS 10.15 or higher
 - TVOS 13.0 or higher
 - WatchOS 8.0 or higher
-- XCode 13 or higher
+- Xcode 13 or higher
 
 ## Installation
 
-### Cocoapods
+### CocoaPods
 
-CombineAsync is available through [CocoaPods](https://cocoapods.org). To install
-it, simply add the following line to your Podfile:
+You can easily install CombineAsync via [CocoaPods](https://cocoapods.org). Add the following line to your Podfile:
 
 ```ruby
 pod 'CombineAsync', '~> 1.2'
 ```
 
-### Swift Package Manager from XCode
+### Swift Package Manager (Xcode)
 
-- Add it using XCode menu **File > Swift Package > Add Package Dependency**
-- Add **<https://github.com/hainayanda/CombineAsync.git>** as Swift Package URL
-- Set rules at **version**, with **Up to Next Major** option and put **1.2.0** as its version
-- Click next and wait
+To install using Xcode's Swift Package Manager, follow these steps:
 
-### Swift Package Manager from Package.swift
+- Go to **File > Swift Package > Add Package Dependency**
+- Enter the URL: **<https://github.com/hainayanda/CombineAsync.git>**
+- Choose **Up to Next Major** for the version rule and set the version to **1.2.0**.
+- Click "Next" and wait for the package to be fetched.
 
-Add as your target dependency in **Package.swift**
+### Swift Package Manager (Package.swift)
+
+If you prefer using Package.swift, add CombineAsync as a dependency in your **Package.swift** file:
 
 ```swift
 dependencies: [
@@ -51,7 +52,7 @@ dependencies: [
 ]
 ```
 
-Use it in your target as a `CombineAsync`
+Then, include it in your target:
 
 ```swift
  .target(
@@ -60,51 +61,36 @@ Use it in your target as a `CombineAsync`
 )
 ```
 
-## Author
-
-hainayanda, hainayanda@outlook.com
-
-## License
-
-CombineAsync is available under the MIT license. See the LICENSE file for more info.
-
 ## Usage
 
-`CombineAsync` contains several extensions that can be used when working with `Combine` and Swift async
+`CombineAsync` provides various extensions and utilities for working with `Combine` and Swift async. Here are some of the key features:
 
 ### Publisher to Async
 
-You can convert any object that implements `Publisher` into Swift async with a single call:
+Convert any object that implements `Publisher` into Swift async with a single call:
 
 ```swift
-// implicitly await with 30 second timeout
+// Implicitly await with a 30-second timeout
 let result = await publisher.sinkAsynchronously()
 
-// or with timeout explicitly
+// Specify a timeout explicitly
 let timedResult = await publisher.sinkAsynchronously(timeout: 1)
 ```
 
-it will produce `PublisherToAsyncError` if an error happens in the conversion. The errors are:
-- `finishedButNoValue`
-- `timeout`
-- `failToProduceAnOutput`
+### Sequence of Publisher to an Array of Output
 
-other than those errors, it will rethrow the error produced by the original `Publisher`
-
-### Sequence of Publisher to an array of output
-
-Similar to `Publisher` to async, any sequence of `Publisher` can be converted to async too with a single call:
+Convert a sequence of `Publisher` into async with a single call:
 
 ```swift
 let results = await arrayOfPublishers.sinkAsynchronously()
 
-// or with timeout
+// Specify a timeout
 let timedResults = await arrayOfPublishers.sinkAsynchronously(timeout: 1)
 ```
 
-### Future from async
+### Future from Async
 
-You can convert Swift async to a `Future` object with provided convenience init:
+Convert Swift async code into a `Future` object with ease:
 
 ```swift
 let future = Future { 
@@ -114,7 +100,7 @@ let future = Future {
 
 ### Publisher Async Sink
 
-Sometimes your sink might execute something asynchronous and you really want to use await inside the sink without explicitly create a Task. This can be achieved by call `asyncSink`:
+Execute asynchronous code inside a sink without explicitly creating a `Task`:
 
 ```swift
 publisher.asyncSink { output in
@@ -124,131 +110,68 @@ publisher.asyncSink { output in
 
 ### Auto Release Sink
 
-You can ignore the cancellable and expect that the closure will be removed on completion by using `autoReleaseSink`:
+Automatically release a closure in the sink after a specified duration or when an object is released:
 
 ```swift
-publisher.autoReleaseSink { completion in
-    // do something on completed
-} receiveValue: { output in
-    // do something to receive value
-}
-```
-
-By default, it will auto release the closure after 30 seconds.
-
-If you want the closure to be released whenever some object is released, just pass the object:
-
-```swift
-publisher.autoReleaseSink(retainedTo: self) { _ in
-    // do something on completed
-} receiveValue: { 
-    // do something on receive value
-}
-```
-
-If you want the closure to be released using a timeout, just pass the timeout:
-
-```swift
-publisher.autoReleaseSink(timeout: 60) { _ in
-    // do something on completed
-} receiveValue: { 
-    // do something on receive value
-}
-```
-
-Whatever you pass, it will try to release the closure whenever one of the conditions is met:
-
-```swift
-// the closure will be released after completion, or 60 second, or when self is released.
 publisher.autoReleaseSink(retainedTo: self, timeout: 60) { _ in
-    // do something on completed
+    // Handle completion
 } receiveValue: { 
-    // do something on receive value
-}
-```
-
-If you need to release it manually, the method return `RetainStateCancellable` object, which is a Cancellable that has a RetainState so you could know whether the closure is already released or not:
-
-```swift
-// the closure will be released after completion or 30 seconds, or when the self is released.
-let retainCancellable = publisher.autoReleaseSink(retainedTo: self, timeout: 30) { _ in
-    // do something on completed
-} receiveValue: { 
-    // do something on receive value
-}
-
-let typeErased = retainCancellable.eraseToAnyCancellable()
-
-...
-...
-
-switch retainCancellable.state { 
-    case .retained: 
-    print("closure still retained")
-    case .released: 
-    print("closure already released")
+    // Handle value reception
 }
 ```
 
 ### Publisher error recovery
 
-`CombineAsync` gives you a way to recover from errors using 3 other methods:
+Recover from errors using three different methods:
 
 ```swift
-// will ignore error and produce AnyPublisher<Output, Never>
+// Ignore errors and produce AnyPublisher<Output, Never>
 publisher.ignoreError()
 
-// will convert the error to output and produce AnyPublisher<Output, Never>
+// Convert errors to output and produce AnyPublisher<Output, Never>
 publisher.replaceError { error in convertErrorToOutput(error) }
 
-// will try to convert the error to output and produce AnyPublisher<Output, Failure>
-// if the output is nil, it will just pass the error
+// Attempt to convert errors to output and produce AnyPublisher<Output, Failure>
 publisher.replaceErrorIfNeeded { error in convertErrorToOutputIfNeeded(error) }
 ```
 
-It's similar to `replaceError`, but accepts a closure instead of just single output
+### Sequence of Publisher to a Single Publisher
 
-### Sequence of Publisher to a single Publisher
-
-`CombineAsync` give you a shortcut to merge a sequence of `Publisher` into a single `Publisher` that emits an array of output with a single call:
+Merge a sequence of `Publisher` into a single `Publisher` that emits an array of output:
 
 ```swift
-// will collect all the emitted elements from all publishers
+// Collect all emitted elements from all publishers
 let allElementsEmittedPublisher = arrayOfPublishers.merged()
 
-// will collect only the first emitted element from all publishers
+// Collect only the first emitted element from all publishers
 let firstElementsEmittedPublisher = arrayOfPublishers.mergedFirsts()
 ```
 
 ### Asynchronous Map
 
-`CombineAsync` gives you the ability to map using an async mapper. it will run all the mapping parallel and collect the results while maintaining the original order:
+Map using an async mapper while maintaining the original order:
 
 ```swift
-// map
+// Map
 let mapped = try await arrayOfID.asyncMap { await getUser(with: $0) }
 
-// compact map
+// Compact map
 let compactMapped = try await arrayOfID.asyncCompactMap { await getUser(with: $0) }
-
-// with timeout
-let timedMapped = try await arrayOfID.asyncMap(timeout: 10) { await getUser(with: $0) }
-let timedCompactMapped = try await arrayOfID.asyncCompactMap(timeout: 10) { await getUser(with: $0) }
 ```
 
 If you prefer using `Publisher` instead, change `asyncMap` to `futureMap` and `asyncCompactMap` to `futureCompactMap`:
 
 ```swift
-// map
+// Map
 let futureMapped: AnyPublisher<[User], Error> = arrayOfID.futureMap { await getUser(with: $0) }
 
-// compact map
+// Compact map
 let futureCompactMapped: AnyPublisher<[User], Error> = arrayOfID.futureCompactMap { await getUser(with: $0) }
 ```
 
 ### Publisher Async Map
 
-If you need to use Publisher Map asynchronously, you can do it with `CombineAsync`:
+Map asynchronously using `CombineAsync`:
 
 ```swift
 publisher.asyncMap { output in
@@ -257,6 +180,7 @@ publisher.asyncMap { output in
 ```
 
 There are some async map method you can use:
+
 - `asyncMap` which is equivalent with `map` but asynchronous
 - `asyncTryMap` which is equivalent with `tryMap` but asynchronous
 - `asyncCompactMap` which is equivalent with `compactMap` but asynchronous
@@ -264,11 +188,11 @@ There are some async map method you can use:
 
 ### Publisher Map Sequence
 
-If you have the Publisher with Sequence as its Ouput and want to map each element without call map on the sequence output manually, `CombineAsync` give you the ability to bypass that:
+Map elements of a `Publisher` with a `Sequence` as its output:
 
 ```swift
 myArrayPublisher.mapSequence { element in
-    // do map the element of the sequence to another type
+    // Map the element of the sequence to another type
 }
 ```
 
@@ -283,6 +207,7 @@ myArrayPublisher.map { output in
 ```
 
 All of the sequence mapper that you can use are:
+
 - `mapSequence(_:)` which  bypass `Sequence.map(_:)`
 - `compactMapSequence(_:)` which  bypass `Sequence.compactMap(_:)`
 - `tryMapSequence(_:)` which  bypass `Sequence.map(_:)` but with throwing mapper closure
@@ -292,4 +217,12 @@ All of the sequence mapper that you can use are:
 
 ## Contribute
 
-You know how, just clone and do a pull request
+Feel free to contribute by cloning the repository and creating a pull request.
+
+## Author
+
+Nayanda Haberty, <hainayanda@outlook.com>
+
+## License
+
+CombineAsync is available under the MIT license. See the LICENSE file for more info.
