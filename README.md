@@ -108,6 +108,16 @@ publisher.asyncSink { output in
 }
 ```
 
+### Publisher Debounce Async Sink
+
+Execute asynchronous code inside a sink and make it run atomically:
+
+```swift
+publisher.debounceAsyncSink { output in
+    await somethingAsync(output)
+}
+```
+
 ### Auto Release Sink
 
 Automatically release a closure in the sink after a specified duration or when an object is released:
@@ -145,28 +155,6 @@ let allElementsEmittedPublisher = arrayOfPublishers.merged()
 
 // Collect only the first emitted element from all publishers
 let firstElementsEmittedPublisher = arrayOfPublishers.mergedFirsts()
-```
-
-### Asynchronous Map
-
-Map using an async mapper while maintaining the original order:
-
-```swift
-// Map
-let mapped = try await arrayOfID.asyncMap { await getUser(with: $0) }
-
-// Compact map
-let compactMapped = try await arrayOfID.asyncCompactMap { await getUser(with: $0) }
-```
-
-If you prefer using `Publisher` instead, change `asyncMap` to `futureMap` and `asyncCompactMap` to `futureCompactMap`:
-
-```swift
-// Map
-let futureMapped: AnyPublisher<[User], Error> = arrayOfID.futureMap { await getUser(with: $0) }
-
-// Compact map
-let futureCompactMapped: AnyPublisher<[User], Error> = arrayOfID.futureCompactMap { await getUser(with: $0) }
 ```
 
 ### Publisher Async Map
