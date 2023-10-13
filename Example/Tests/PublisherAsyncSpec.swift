@@ -35,7 +35,19 @@ class PublisherAsyncSpec: QuickSpec {
             cancellable?.cancel()
             expect(sinkOutput).to(equal(input))
         }
-        
+        it("should sink asynchronously with debounce behavior") {
+            var sinkOutputs: [Int] = []
+            cancellable = subject.debounceAsyncSink { _ in } receiveValue: { output in
+                try? await Task.sleep(nanoseconds: 1000_000)
+                sinkOutputs.append(output)
+            }
+            subject.send(1)
+            subject.send(2)
+            subject.send(3)
+            subject.send(4)
+            subject.send(5)
+            expect(sinkOutputs).toEventually(equal([1, 5]))
+        }
     }
 }
 
