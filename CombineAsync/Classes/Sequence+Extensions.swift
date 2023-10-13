@@ -56,6 +56,7 @@ extension Sequence {
     ///   - mapper: A mapping async closure. `mapper` accepts an element of this sequence as its parameter
     ///             and returns a transformed value of the same or of a different type asynchronously.
     /// - Returns: An array containing the transformed elements of this sequence
+    @available(*, deprecated, message: "Use better asyncMap from github.com/hainayanda/CollectionExtension instead. Will removed in the next release")
     public func asyncMap<Mapped>(timeout: TimeInterval, _ mapper: @escaping (Element) async throws -> Mapped) async throws -> [Mapped] {
         try await convertToIndexedFutures(mapper)
             .sinkAsynchronously(timeout: timeout)
@@ -72,6 +73,7 @@ extension Sequence {
     ///   - mapper: A mapping async closure. `mapper` accepts an element of this sequence as its parameter
     ///             and returns an optional transformed value of the same or of a different type asynchronously.
     /// - Returns: An array containing the transformed elements of this sequence
+    @available(*, deprecated, message: "Use better asyncCompactMap from github.com/hainayanda/CollectionExtension instead. Will removed in the next release")
     public func asyncCompactMap<Mapped>(timeout: TimeInterval, _ mapper: @escaping (Element) async throws -> Mapped?) async throws -> [Mapped] {
         try await convertToIndexedFutures(mapper)
             .sinkAsynchronously(timeout: timeout)
@@ -86,6 +88,7 @@ extension Sequence {
     /// - Parameter mapper: A mapping async closure. `mapper` accepts an element of this sequence as its parameter
     ///   and returns a transformed value of the same or of a different type asynchronously.
     /// - Returns: A publisher that will produce an array containing the transformed elements of this sequence
+    @available(*, deprecated, message: "Use better futureMap from github.com/hainayanda/CollectionExtension instead. Will removed in the next release")
     public func futureMap<Mapped>(_ mapper: @escaping (Element) async throws -> Mapped) -> AnyPublisher<[Mapped], Error> {
         convertToIndexedFutures(mapper)
             .merged()
@@ -103,6 +106,7 @@ extension Sequence {
     /// - Parameter mapper: A mapping async closure. `mapper` accepts an element of this sequence as its parameter
     ///   and returns an optional transformed value of the same or of a different type asynchronously.
     /// - Returns: A publisher that will produce an array containing the transformed elements of this sequence
+    @available(*, deprecated, message: "Use better futureCompactMap from github.com/hainayanda/CollectionExtension instead. Will removed in the next release")
     public func futureCompactMap<Mapped>(_ mapper: @escaping (Element) async throws -> Mapped?) -> AnyPublisher<[Mapped], Error> {
         convertToIndexedFutures(mapper)
             .merged()
