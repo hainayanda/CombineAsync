@@ -8,7 +8,61 @@
 import Foundation
 import Combine
 
+private actor AtomicRunner {
+    var value: Bool = false
+    
+    func run(ifNotFree: () async -> Void, ifFree execute: () async -> Void) async {
+        guard !value else {
+            await ifNotFree()
+            return
+        }
+        value = true
+        await execute()
+        value = false
+    }
+}
+
+private actor Queued<Value> {
+    var value: Value?
+    
+    func queue(_ value: Value) {
+        self.value = value
+    }
+    
+    func dequeue() -> Value? {
+        let output = self.value
+        self.value = nil
+        return output
+    }
+}
+
 extension Publisher {
+    
+    /// Attaches a subscriber with async closure-based behavior.
+    /// This method creates the subscriber and immediately requests an unlimited number of values, prior to returning the subscriber.
+    /// The return value should be held, otherwise the stream will be canceled.
+    /// If the output is generated when sink closure is still running, it will not execute next closure right away.
+    /// It will store the value and wait until the current sink is finished.
+    /// When the sink is finished, then it will only execute the closure using the latest output that stored.
+    /// - parameter receiveComplete: The async closure to execute on completion.
+    /// - parameter receiveValue: The async closure to execute on receipt of a value.
+    /// - Returns: A cancellable instance, which you use when you end assignment of the received value. Deallocation of the result will tear down the subscription stream.
+    public func debounceAsyncSink(
+        receiveCompletion: @escaping ((Subscribers.Completion<Self.Failure>) async -> Void),
+        receiveValue: @escaping ((Self.Output) async -> Void)) -> AnyCancellable {
+            let runner = AtomicRunner()
+            let queued = Queued<Output>()
+            return asyncSink(receiveCompletion: receiveCompletion) { output in
+                await runner.run {
+                    await queued.queue(output)
+                } ifFree: {
+                    await receiveValue(output)
+                    if let pending = await queued.dequeue() {
+                        await receiveValue(pending)
+                    }
+                }
+            }
+        }
     
     /// Attaches a subscriber with async closure-based behavior.
     /// This method creates the subscriber and immediately requests an unlimited number of values, prior to returning the subscriber.
