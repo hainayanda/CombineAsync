@@ -36,6 +36,11 @@ private actor Queued<Value> {
     }
 }
 
+private enum AsyncSinkEvent<Output, Failure: Error> {
+    case output(Output)
+    case completion(Subscribers.Completion<Failure>)
+}
+
 extension Publisher {
     
     /// Attaches a subscriber with async closure-based behavior.
@@ -48,17 +53,30 @@ extension Publisher {
     /// - parameter receiveValue: The async closure to execute on receipt of a value.
     /// - Returns: A cancellable instance, which you use when you end assignment of the received value. Deallocation of the result will tear down the subscription stream.
     public func debounceAsyncSink(
-        receiveCompletion: @escaping ((Subscribers.Completion<Self.Failure>) async -> Void),
-        receiveValue: @escaping ((Self.Output) async -> Void)) -> AnyCancellable {
+        priority: TaskPriority? = nil,
+        receiveCompletion: @Sendable @escaping (Subscribers.Completion<Failure>) async -> Void,
+        receiveValue: @Sendable @escaping (Output) async -> Void) -> AnyCancellable {
             let runner = AtomicRunner()
-            let queued = Queued<Output>()
-            return asyncSink(receiveCompletion: receiveCompletion) { output in
+            let queued = Queued<AsyncSinkEvent<Output, Failure>>()
+            return asyncSink(priority: priority) { completion in
                 await runner.run {
-                    await queued.queue(output)
+                    await queued.queue(.completion(completion))
+                } ifFree: {
+                    await receiveCompletion(completion)
+                }
+            } receiveValue: { output in
+                await runner.run {
+                    await queued.queue(.output(output))
                 } ifFree: {
                     await receiveValue(output)
-                    if let pending = await queued.dequeue() {
-                        await receiveValue(pending)
+                    guard let pending = await queued.dequeue() else {
+                        return
+                    }
+                    switch pending {
+                    case .output(let output):
+                        await receiveValue(output)
+                    case .completion(let completion):
+                        await receiveCompletion(completion)
                     }
                 }
             }
@@ -133,6 +151,30 @@ extension Publisher {
 }
 
 extension Publisher where Failure == Never {
+    
+    /// Attaches a subscriber with async closure-based behavior.
+    /// This method creates the subscriber and immediately requests an unlimited number of values, prior to returning the subscriber.
+    /// The return value should be held, otherwise the stream will be canceled.
+    /// If the output is generated when sink closure is still running, it will not execute next closure right away.
+    /// It will store the value and wait until the current sink is finished.
+    /// When the sink is finished, then it will only execute the closure using the latest output that stored.
+    /// - parameter receiveValue: The async closure to execute on receipt of a value.
+    /// - Returns: A cancellable instance, which you use when you end assignment of the received value. Deallocation of the result will tear down the subscription stream.
+    public func debounceAsyncSink(priority: TaskPriority? = nil, receiveValue: @Sendable @escaping (Output) async -> Void) -> AnyCancellable {
+        let runner = AtomicRunner()
+        let queued = Queued<Output>()
+        return asyncSink(priority: priority) { output in
+            await runner.run {
+                await queued.queue(output)
+            } ifFree: {
+                await receiveValue(output)
+                guard let pending = await queued.dequeue() else {
+                    return
+                }
+                await receiveValue(pending)
+            }
+        }
+    }
     
     /// Attaches a subscriber with async closure-based behavior.
     /// This method creates the subscriber and immediately requests an unlimited number of values, prior to returning the subscriber.
