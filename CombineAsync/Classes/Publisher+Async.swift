@@ -71,14 +71,15 @@ extension Publisher {
     /// - parameter receiveValue: The async closure to execute on receipt of a value.
     /// - Returns: A cancellable instance, which you use when you end assignment of the received value. Deallocation of the result will tear down the subscription stream.
     @inlinable public func asyncSink(
-        receiveCompletion: @escaping ((Subscribers.Completion<Self.Failure>) async throws -> Void),
-        receiveValue: @escaping ((Self.Output) async throws -> Void)) -> AnyCancellable {
+        priority: TaskPriority? = nil,
+        receiveCompletion: @Sendable @escaping (Subscribers.Completion<Failure>) async throws -> Void,
+        receiveValue: @Sendable @escaping (Output) async throws -> Void) -> AnyCancellable {
             self.sink { completion in
-                Task {
+                Task(priority: priority) {
                     try await receiveCompletion(completion)
                 }
             } receiveValue: { output in
-                Task {
+                Task(priority: priority) {
                     try await receiveValue(output)
                 }
             }
@@ -87,10 +88,10 @@ extension Publisher {
     /// Transforms all elements from the upstream publisher with a provided async throwable closure.
     /// - Parameter transform: An async throwable closure that takes one element as its parameter and returns a new element.
     /// - Returns: A publisher that uses the provided closure to map elements from the upstream publisher to new elements that it then publishes.
-    @inlinable public func asyncTryMap<T>(_ transform: @escaping (Output) async throws -> T) -> AnyPublisher<T, Error> {
+    @inlinable public func asyncTryMap<T>(priority: TaskPriority? = nil, _ transform: @Sendable @escaping (Output) async throws -> T) -> AnyPublisher<T, Error> {
         self.mapError { $0 }
             .flatMap { output in
-                Future<T, Error> {
+                Future<T, Error>(priority: priority) {
                     try await transform(output)
                 }
             }
@@ -101,9 +102,9 @@ extension Publisher {
     /// If your closure can throw an error, use asyncTryMap(_:) instead.
     /// - Parameter transform: An async closure that takes one element as its parameter and returns a new element.
     /// - Returns: A publisher that uses the provided closure to map elements from the upstream publisher to new elements that it then publishes.
-    @inlinable public func asyncMap<T>(_ transform: @escaping (Output) async -> T) -> AnyPublisher<T, Failure> {
+    @inlinable public func asyncMap<T>(priority: TaskPriority? = nil, _ transform: @Sendable @escaping (Output) async -> T) -> AnyPublisher<T, Failure> {
         self.flatMap { output in
-            Future<T, Never> {
+            Future<T, Never>(priority: priority) {
                 await transform(output)
             }
             .setFailureType(to: Failure.self)
@@ -114,8 +115,8 @@ extension Publisher {
     /// Calls an async throwable closure with each received element and publishes any returned optional that has a value.
     /// - Parameter transform: An async closure that receives a value and returns an optional value.
     /// - Returns: Any non-`nil` optional results of the calling the supplied closure.
-    @inlinable public func asyncTryCompactMap<T>(_ transform: @escaping (Output) async throws -> T?) -> AnyPublisher<T, Error> {
-        self.asyncTryMap(transform)
+    @inlinable public func asyncTryCompactMap<T>(priority: TaskPriority? = nil, _ transform: @Sendable @escaping (Output) async throws -> T?) -> AnyPublisher<T, Error> {
+        self.asyncTryMap(priority: priority, transform)
             .compactMap { $0 }
             .eraseToAnyPublisher()
     }
@@ -124,8 +125,8 @@ extension Publisher {
     /// If your closure can throw an error, use asyncTryCompactMap(_:) instead.
     /// - Parameter transform: An async closure that receives a value and returns an optional value.
     /// - Returns: Any non-`nil` optional results of the calling the supplied closure.
-    @inlinable public func asyncCompactMap<T>(_ transform: @escaping (Output) async -> T?) -> AnyPublisher<T, Failure> {
-        self.asyncMap(transform)
+    @inlinable public func asyncCompactMap<T>(priority: TaskPriority? = nil, _ transform: @Sendable @escaping (Output) async -> T?) -> AnyPublisher<T, Failure> {
+        self.asyncMap(priority: priority, transform)
             .compactMap { $0 }
             .eraseToAnyPublisher()
     }
@@ -138,9 +139,9 @@ extension Publisher where Failure == Never {
     /// The return value should be held, otherwise the stream will be canceled.
     /// - parameter receiveValue: The async closure to execute on receipt of a value.
     /// - Returns: A cancellable instance, which you use when you end assignment of the received value. Deallocation of the result will tear down the subscription stream.
-    @inlinable public func asyncSink(receiveValue: @escaping ((Self.Output) async throws -> Void)) -> AnyCancellable {
+    @inlinable public func asyncSink(priority: TaskPriority? = nil, receiveValue: @Sendable @escaping (Output) async throws -> Void) -> AnyCancellable {
         self.sink { output in
-            Task {
+            Task(priority: priority) {
                 try await receiveValue(output)
             }
         }
