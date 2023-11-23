@@ -44,24 +44,4 @@ extension Publisher where Output: Sequence {
             .tryMap { try $0.compactMap(transformSequence) }
             .eraseToAnyPublisher()
     }
-    
-    /// Map the Output element to another element asynchronously
-    /// - Parameters:
-    ///   - timeout: timeout in second, by default 30 seconds
-    ///   - transformSequence: Throwing asynchronous closure that accept each element from output and return the transformation result
-    /// - Returns: AnyPublisher of Array of new element with same Error as Failure  type
-    public func asyncMapSequence<T>(timeout: TimeInterval = 30, _ transformSequence: @escaping (Output.Element) async throws -> T) -> AnyPublisher<[T], Error> {
-        mapError { $0 }
-            .asyncTryMap { try await $0.asyncMap(timeout: timeout, transformSequence) }
-    }
-    
-    /// Compact map the Output element to another element asynchronously
-    /// - Parameters:
-    ///   - timeout: timeout in second, by default 30 seconds
-    ///   - transformSequence: Throwing asyncrhonous closure that accept each element from output and return the transformation optional result
-    /// - Returns: AnyPublisher of Array of new element with same Error as Failure  type
-    public func asyncCompactMapSequence<T>(timeout: TimeInterval = 30, _ transformSequence: @escaping (Output.Element) async throws -> T?) -> AnyPublisher<[T], Error> {
-        mapError { $0 }
-            .asyncTryMap { try await $0.asyncCompactMap(timeout: timeout, transformSequence) }
-    }
 }
