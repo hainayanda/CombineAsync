@@ -12,6 +12,14 @@ import Nimble
 import Combine
 import CombineAsync
 
+private class Wrapper<Wrapped> {
+    var value: Wrapped
+    
+    init(value: Wrapped) {
+        self.value = value
+    }
+}
+
 class PublisherAsyncSpec: QuickSpec {
     
     override class func spec() {
@@ -22,31 +30,31 @@ class PublisherAsyncSpec: QuickSpec {
             subject = .init()
         }
         it("should sink asynchronously") {
-            var sinkOutput: Int?
+            let sinkOutput: Wrapper<Int?> = .init(value: nil)
             let input: Int = .random(in: -100..<100)
             waitUntil { done in
                 cancellable = subject.asyncSink { _ in } receiveValue: { output in
                     try await Task.sleep(nanoseconds: 10_000)
-                    sinkOutput = output
+                    sinkOutput.value = output
                     done()
                 }
                 subject.send(input)
             }
             cancellable?.cancel()
-            expect(sinkOutput).to(equal(input))
+            expect(sinkOutput.value).to(equal(input))
         }
         it("should sink asynchronously with debounce behavior") {
-            var sinkOutputs: [Int] = []
+            let sinkOutputs: Wrapper<[Int]> = .init(value: [])
             cancellable = subject.debounceAsyncSink { _ in } receiveValue: { output in
                 try? await Task.sleep(nanoseconds: 1000_000)
-                sinkOutputs.append(output)
+                sinkOutputs.value.append(output)
             }
             subject.send(1)
             subject.send(2)
             subject.send(3)
             subject.send(4)
             subject.send(5)
-            expect(sinkOutputs).toEventually(equal([1, 5]))
+            expect(sinkOutputs.value).toEventually(equal([1, 5]))
         }
     }
 }
@@ -79,24 +87,24 @@ class AsyncPublisherAsyncSpec: AsyncSpec {
     }
 }
 
-private func testTryMap(_ input: Int) async throws -> String {
+@Sendable private func testTryMap(_ input: Int) async throws -> String {
     try await Task.sleep(nanoseconds: 10_000)
     return "\(input)"
 }
 
-private func testMap(_ input: Int) async -> String {
+@Sendable private func testMap(_ input: Int) async -> String {
     do {
         try await Task.sleep(nanoseconds: 10_000)
     } catch { }
     return "\(input)"
 }
 
-private func testTryCompactMap(_ input: Int) async throws -> String? {
+@Sendable private func testTryCompactMap(_ input: Int) async throws -> String? {
     try await Task.sleep(nanoseconds: 10_000)
     return input % 2 == 0 ? "\(input)": nil
 }
 
-private func testCompactMap(_ input: Int) async -> String? {
+@Sendable private func testCompactMap(_ input: Int) async -> String? {
     do {
         try await Task.sleep(nanoseconds: 10_000)
     } catch { }

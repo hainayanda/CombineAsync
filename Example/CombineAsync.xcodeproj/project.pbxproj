@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3A2CF1632A1E5FEE004B6C37 /* SequenceExtensionsSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A2CF1612A1E5F43004B6C37 /* SequenceExtensionsSpec.swift */; };
 		3A3F70B92AC716E2007269EC /* PublisherAsyncSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A3F70B72AC716B3007269EC /* PublisherAsyncSpec.swift */; };
 		3A97B1A92A3EE1D8002A0B85 /* PublisherAutoReleaseSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A97B1A72A3EE18C002A0B85 /* PublisherAutoReleaseSpec.swift */; };
 		3AAB220C2A1E48DB00B47C3B /* FutureExtensionsSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AAB220B2A1E48DB00B47C3B /* FutureExtensionsSpec.swift */; };
@@ -35,7 +34,6 @@
 
 /* Begin PBXFileReference section */
 		0B8D50A14A5C228159666D60 /* Pods-CombineAsync_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CombineAsync_Example.release.xcconfig"; path = "Target Support Files/Pods-CombineAsync_Example/Pods-CombineAsync_Example.release.xcconfig"; sourceTree = "<group>"; };
-		3A2CF1612A1E5F43004B6C37 /* SequenceExtensionsSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SequenceExtensionsSpec.swift; sourceTree = "<group>"; };
 		3A3F70B72AC716B3007269EC /* PublisherAsyncSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherAsyncSpec.swift; sourceTree = "<group>"; };
 		3A97B1A72A3EE18C002A0B85 /* PublisherAutoReleaseSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublisherAutoReleaseSpec.swift; sourceTree = "<group>"; };
 		3AAB220A2A1E48DA00B47C3B /* CombineAsync_Tests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CombineAsync_Tests-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -142,7 +140,6 @@
 				3A3F70B72AC716B3007269EC /* PublisherAsyncSpec.swift */,
 				3A97B1A72A3EE18C002A0B85 /* PublisherAutoReleaseSpec.swift */,
 				3AAB220D2A1E4FD900B47C3B /* PublisherExtensionsSpec.swift */,
-				3A2CF1612A1E5F43004B6C37 /* SequenceExtensionsSpec.swift */,
 				3AAB220F2A1E505F00B47C3B /* TestError.swift */,
 				3AAB220A2A1E48DA00B47C3B /* CombineAsync_Tests-Bridging-Header.h */,
 				607FACE91AFB9204008FA782 /* Supporting Files */,
@@ -429,7 +426,6 @@
 				3AAB220E2A1E4FD900B47C3B /* PublisherExtensionsSpec.swift in Sources */,
 				3AAB22132A1E5A4500B47C3B /* Helper.swift in Sources */,
 				3A97B1A92A3EE1D8002A0B85 /* PublisherAutoReleaseSpec.swift in Sources */,
-				3A2CF1632A1E5FEE004B6C37 /* SequenceExtensionsSpec.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

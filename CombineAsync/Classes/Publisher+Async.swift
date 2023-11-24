@@ -9,36 +9,22 @@ import Foundation
 import Combine
 
 private actor AtomicRunner {
-    var value: Bool = false
+    var busy: Bool = false
+    var pendingRunner: (() async -> Void)?
     
-    func run(ifNotFree: () async -> Void, ifFree execute: () async -> Void) async {
-        guard !value else {
-            await ifNotFree()
+    func runWhenFree(_ runner: @Sendable @escaping () async -> Void) async {
+        guard !busy else {
+            pendingRunner = runner
             return
         }
-        value = true
-        await execute()
-        value = false
+        busy = true
+        await runner()
+        if let pendingRunner {
+            self.pendingRunner = nil
+            await pendingRunner()
+        }
+        busy = false
     }
-}
-
-private actor Queued<Value> {
-    var value: Value?
-    
-    func queue(_ value: Value) {
-        self.value = value
-    }
-    
-    func dequeue() -> Value? {
-        let output = self.value
-        self.value = nil
-        return output
-    }
-}
-
-private enum AsyncSinkEvent<Output, Failure: Error> {
-    case output(Output)
-    case completion(Subscribers.Completion<Failure>)
 }
 
 extension Publisher {
@@ -57,27 +43,13 @@ extension Publisher {
         receiveCompletion: @Sendable @escaping (Subscribers.Completion<Failure>) async -> Void,
         receiveValue: @Sendable @escaping (Output) async -> Void) -> AnyCancellable {
             let runner = AtomicRunner()
-            let queued = Queued<AsyncSinkEvent<Output, Failure>>()
             return asyncSink(priority: priority) { completion in
-                await runner.run {
-                    await queued.queue(.completion(completion))
-                } ifFree: {
+                await runner.runWhenFree {
                     await receiveCompletion(completion)
                 }
             } receiveValue: { output in
-                await runner.run {
-                    await queued.queue(.output(output))
-                } ifFree: {
+                await runner.runWhenFree {
                     await receiveValue(output)
-                    guard let pending = await queued.dequeue() else {
-                        return
-                    }
-                    switch pending {
-                    case .output(let output):
-                        await receiveValue(output)
-                    case .completion(let completion):
-                        await receiveCompletion(completion)
-                    }
                 }
             }
         }
@@ -162,16 +134,9 @@ extension Publisher where Failure == Never {
     /// - Returns: A cancellable instance, which you use when you end assignment of the received value. Deallocation of the result will tear down the subscription stream.
     public func debounceAsyncSink(priority: TaskPriority? = nil, receiveValue: @Sendable @escaping (Output) async -> Void) -> AnyCancellable {
         let runner = AtomicRunner()
-        let queued = Queued<Output>()
         return asyncSink(priority: priority) { output in
-            await runner.run {
-                await queued.queue(output)
-            } ifFree: {
+            await runner.runWhenFree {
                 await receiveValue(output)
-                guard let pending = await queued.dequeue() else {
-                    return
-                }
-                await receiveValue(pending)
             }
         }
     }
