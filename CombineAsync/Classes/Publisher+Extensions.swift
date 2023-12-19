@@ -24,7 +24,7 @@ extension Publisher {
     /// - Parameter timeout: timeout in second, by default is 30 seconds
     /// - Returns: first output
     public func sinkAsynchronously(timeout: TimeInterval = 30) async throws -> Output {
-        return try await sinkAsync(with: timeout)
+        return try await autoReleaseSinkAsync(timeout: timeout)
     }
     
     /// Return a new publisher will ignore the error
@@ -71,13 +71,15 @@ extension Publisher {
     
     func autoReleaseSinkAsync(timeout: TimeInterval) async throws -> Self.Output {
         guard timeout != 0 else { throw CombineAsyncError.timeout }
+        let callingTime = Date()
         return try await withCheckedThrowingContinuation { continuation in
             var valueReceived = false
             first().autoReleaseSink(timeout: timeout) { result in
                 switch result {
                 case .finished:
                     if !valueReceived {
-                        continuation.resume(throwing: CombineAsyncError.finishedButNoValue)
+                        let isTimeout = Date().timeIntervalSince(callingTime) >= timeout
+                        continuation.resume(throwing: isTimeout ? CombineAsyncError.timeout: CombineAsyncError.finishedButNoValue)
                     }
                 case let .failure(error):
                     continuation.resume(throwing: error)
@@ -88,25 +90,6 @@ extension Publisher {
             }
         }
     }
-    
-    func sinkAsync(with timeout: TimeInterval) async throws -> Self.Output {
-        guard timeout != 0 else { throw CombineAsyncError.timeout }
-        guard timeout > 0 else { return try await autoReleaseSinkAsync(timeout: .none) }
-        return try await withThrowingTaskGroup(of: Output.self) { group in
-            group.addTask {
-                try await autoReleaseSinkAsync(timeout: timeout)
-            }
-            group.addTask {
-                try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
-                throw CombineAsyncError.timeout
-            }
-            guard let success = try await group.next() else {
-                throw CombineAsyncError.failToProduceAnOutput
-            }
-            group.cancelAll()
-            return success
-        }
-    }
 }
 
 extension Publisher where Failure == Never {
@@ -115,7 +98,7 @@ extension Publisher where Failure == Never {
     /// - Parameter timeout: timeout in second, by default is 30 seconds
     /// - Returns: first output
     public func sinkAsynchronously(timeout: TimeInterval = 30) async -> Output? {
-        return try? await sinkAsync(with: timeout)
+        return try? await autoReleaseSinkAsync(timeout: timeout)
     }
     
     /// Assigns each element from a publisher to a property on an class instances object. Different from assign, it will store the object using weak variable so it will not retain the object.
