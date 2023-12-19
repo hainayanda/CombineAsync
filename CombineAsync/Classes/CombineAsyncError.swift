@@ -1,5 +1,5 @@
 //
-//  Error.swift
+//  CombineAsyncError.swift
 //  CombineAsync
 //
 //  Created by Nayanda Haberty on 24/5/23.
@@ -7,7 +7,9 @@
 
 import Foundation
 
-public enum PublisherToAsyncError: Error {
+public typealias PublisherToAsyncError = CombineAsyncError
+
+public enum CombineAsyncError: Error {
     case finishedButNoValue
     case timeout
     case failToProduceAnOutput

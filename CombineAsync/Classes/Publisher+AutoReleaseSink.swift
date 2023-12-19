@@ -14,34 +14,46 @@ public protocol RetainStateCancellable: Cancellable, DeallocateObservable {
     func eraseToAnyCancellable() -> AnyCancellable
 }
 
+public extension RetainStateCancellable {
+    @inlinable func eraseToAnyCancellable() -> AnyCancellable {
+        AnyCancellable(self)
+    }
+}
+
 public enum RetainState {
     case retained
     case released
 }
 
-public class AutoReleaseCancellable: RetainStateCancellable {
+class EmptyCancellable: RetainStateCancellable {
+    let state: RetainState = .released
+    
+    func cancel() { }
+}
+
+public extension TimeInterval {
+    static let none: TimeInterval = -1
+}
+
+class AutoReleaseCancellable: RetainStateCancellable {
     
     @WeakSubject var cancellable: AnyCancellable?
     var cancelTask: (() -> Void)?
     
-    public var state: RetainState { cancellable == nil ? .released: .retained }
+    var state: RetainState { cancellable == nil ? .released: .retained }
     
     init(cancellable: AnyCancellable?, cancelTask: (() -> Void)?) {
         self.cancellable = cancellable
         self.cancelTask = cancelTask
     }
     
-    public func cancel() {
+    func cancel() {
         cancelTask?()
     }
     
-    @inlinable public func eraseToAnyCancellable() -> AnyCancellable {
-        AnyCancellable(self)
-    }
+    var deallocatePublisher: AnyPublisher<Void, Never> { $cancellable.deallocatePublisher }
     
-    public var deallocatePublisher: AnyPublisher<Void, Never> { $cancellable.deallocatePublisher }
-    
-    public func whenDeallocate(do operation: @escaping () -> Void) -> AnyCancellable {
+    func whenDeallocate(do operation: @escaping () -> Void) -> AnyCancellable {
         $cancellable.whenDeallocate(do: operation)
     }
     
@@ -63,6 +75,10 @@ extension Publisher {
         timeout: TimeInterval? = nil,
         receiveCompletion: @escaping ((Subscribers.Completion<Failure>) -> Void),
         receiveValue: @escaping ((Output) -> Void)) -> RetainStateCancellable {
+            guard timeout != 0 else {
+                defer { receiveCompletion(.finished) }
+                return EmptyCancellable()
+            }
             var cancellable: AnyCancellable?
             var deallocateCancellable: AnyCancellable?
             var timerCancellable: AnyCancellable?
@@ -82,7 +98,7 @@ extension Publisher {
             }
             deallocateCancellable = deallocatePublisher(of: object)
                 .sink(receiveValue: release)
-            if let timeout = timeout {
+            if let timeout = timeout, timeout > 0 {
                 timerCancellable = Timer.publish(every: timeout, on: .current, in: .common)
                     .autoconnect()
                     .sink { _ in
@@ -104,6 +120,10 @@ extension Publisher {
         timeout: TimeInterval = 30,
         receiveCompletion: @escaping ((Subscribers.Completion<Failure>) -> Void),
         receiveValue: @escaping ((Output) -> Void)) -> RetainStateCancellable {
+            guard timeout != 0 else {
+                defer { receiveCompletion(.finished) }
+                return EmptyCancellable()
+            }
             var cancellable: AnyCancellable?
             var timerCancellable: AnyCancellable?
             func release() {
@@ -118,11 +138,13 @@ extension Publisher {
             } receiveValue: { value in
                 receiveValue(value)
             }
-            timerCancellable = Timer.publish(every: timeout, on: .current, in: .common)
-                .autoconnect()
-                .sink { _ in
-                    release()
-                }
+            if timeout > 0 {
+                timerCancellable = Timer.publish(every: timeout, on: .current, in: .common)
+                    .autoconnect()
+                    .sink { _ in
+                        release()
+                    }
+            }
             return AutoReleaseCancellable(cancellable: cancellable, cancelTask: release)
         }
 }

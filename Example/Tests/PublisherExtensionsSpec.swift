@@ -34,11 +34,11 @@ class PublisherExtensionsAsyncSpec: AsyncSpec {
                 }
                 it("should throw no value error") {
                     subject.sendAfter(0.1, completion: .finished)
-                    await expect { try await subject.sinkAsynchronously() }.to(throwError(PublisherToAsyncError.finishedButNoValue))
+                    await expect { try await subject.sinkAsynchronously() }.to(throwError(CombineAsyncError.finishedButNoValue))
                 }
                 it("should throw timeout error") {
                     subject.sendAfter(0.2, input: 10_000)
-                    await expect { try await subject.sinkAsynchronously(timeout: 0.1) }.to(throwError(PublisherToAsyncError.timeout))
+                    await expect { try await subject.sinkAsynchronously(timeout: 0.1) }.to(throwError(CombineAsyncError.timeout))
                 }
             }
             context("without error") {
