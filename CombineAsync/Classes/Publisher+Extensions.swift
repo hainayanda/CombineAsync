@@ -70,7 +70,8 @@ extension Publisher {
     // MARK: Internal methods
     
     func autoReleaseSinkAsync(timeout: TimeInterval) async throws -> Self.Output {
-        try await withCheckedThrowingContinuation { continuation in
+        guard timeout != 0 else { throw CombineAsyncError.timeout }
+        return try await withCheckedThrowingContinuation { continuation in
             var valueReceived = false
             first().autoReleaseSink(timeout: timeout) { result in
                 switch result {
@@ -89,7 +90,9 @@ extension Publisher {
     }
     
     func sinkAsync(with timeout: TimeInterval) async throws -> Self.Output {
-        try await withThrowingTaskGroup(of: Output.self) { group in
+        guard timeout != 0 else { throw CombineAsyncError.timeout }
+        guard timeout > 0 else { return try await autoReleaseSinkAsync(timeout: .none) }
+        return try await withThrowingTaskGroup(of: Output.self) { group in
             group.addTask {
                 try await autoReleaseSinkAsync(timeout: timeout)
             }
