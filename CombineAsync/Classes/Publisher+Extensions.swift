@@ -76,7 +76,7 @@ extension Publisher {
                 switch result {
                 case .finished:
                     if !valueReceived {
-                        continuation.resume(throwing: PublisherToAsyncError.finishedButNoValue)
+                        continuation.resume(throwing: CombineAsyncError.finishedButNoValue)
                     }
                 case let .failure(error):
                     continuation.resume(throwing: error)
@@ -95,10 +95,10 @@ extension Publisher {
             }
             group.addTask {
                 try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
-                throw PublisherToAsyncError.timeout
+                throw CombineAsyncError.timeout
             }
             guard let success = try await group.next() else {
-                throw PublisherToAsyncError.failToProduceAnOutput
+                throw CombineAsyncError.failToProduceAnOutput
             }
             group.cancelAll()
             return success

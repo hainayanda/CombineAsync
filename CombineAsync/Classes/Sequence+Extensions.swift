@@ -14,7 +14,7 @@ extension Sequence where Element: Publisher {
     
     // MARK: Public methods
     
-    /// Return an array of the first results of each publisher asynchronously and throw PublisherToAsyncError.timeout if its reach timeout before produce an output
+    /// Return an array of the first results of each publisher asynchronously and throw CombineAsyncError.timeout if its reach timeout before produce an output
     /// - Parameter timeout: timeout in second
     /// - Returns: An array containing the first results of each publisher
     @inlinable public func sinkAsynchronously(timeout: TimeInterval) async throws -> [Element.Output] {

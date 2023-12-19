@@ -10,7 +10,7 @@
 		005EBAAF50432A50FF576A475898AD0F /* SatisfyAllOf.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDF47567B3A7D5655EDEE9E3594DC35 /* SatisfyAllOf.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
 		0271F7C58AFE8ACE673DE9C1A2847803 /* RetainableSubject.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF3EB48B1ABA5AB1F79722E68C749AEC /* RetainableSubject.swift */; };
 		03E399ACCAD9CCF4C522135A8561F71E /* Equal.swift in Sources */ = {isa = PBXBuildFile; fileRef = A041DC9212C8507E1926394A49953AE0 /* Equal.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
-		056B565759ACBF0ECF5EA38976F68B87 /* PublisherToAsyncError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BD23074FC8BB33A92C0268D8880A350 /* PublisherToAsyncError.swift */; };
+		056B565759ACBF0ECF5EA38976F68B87 /* CombineAsyncError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BD23074FC8BB33A92C0268D8880A350 /* CombineAsyncError.swift */; };
 		06D71904F14256BA7FCF5553C07C6760 /* AssertionDispatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 945367CB558998E289A0F931B982DB95 /* AssertionDispatcher.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
 		06EEA441CD39576B5C055E92F526C7CE /* BeGreaterThan.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFBA172BB104C110B8170D920E5B33E7 /* BeGreaterThan.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
 		07C9C6E9B774B48D4C6E136CAFD5BDA6 /* CombineAsync-umbrella.h in Headers */ = {isa = PBXBuildFile; fileRef = D2A07FDBEA5FDBA928B04E02D917ED44 /* CombineAsync-umbrella.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -283,7 +283,7 @@
 		5924008E3505955DFC582DD195BB3907 /* ThrowError.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ThrowError.swift; path = Sources/Nimble/Matchers/ThrowError.swift; sourceTree = "<group>"; };
 		594A8B227714C21FCF9917A85800029C /* DSL+AsyncAwait.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "DSL+AsyncAwait.swift"; path = "Sources/Nimble/DSL+AsyncAwait.swift"; sourceTree = "<group>"; };
 		5B3A8A9F94B2FA1DFEB6625F2B40B477 /* Pods-CombineAsync_Tests-acknowledgements.markdown */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = "Pods-CombineAsync_Tests-acknowledgements.markdown"; sourceTree = "<group>"; };
-		5BD23074FC8BB33A92C0268D8880A350 /* PublisherToAsyncError.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PublisherToAsyncError.swift; path = CombineAsync/Classes/PublisherToAsyncError.swift; sourceTree = "<group>"; };
+		5BD23074FC8BB33A92C0268D8880A350 /* CombineAsyncError.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CombineAsyncError.swift; path = CombineAsync/Classes/CombineAsyncError.swift; sourceTree = "<group>"; };
 		5DFBF7C5A3AA0B9E775AEC2DD750C283 /* BeLessThan.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = BeLessThan.swift; path = Sources/Nimble/Matchers/BeLessThan.swift; sourceTree = "<group>"; };
 		5E36D0F956FCBB4FD01FC5593631C125 /* Quick-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "Quick-dummy.m"; sourceTree = "<group>"; };
 		5EBC8F300895E39EA0DF6D6B2B5E6BCD /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS14.0.sdk/System/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
@@ -748,7 +748,7 @@
 				BB22674AB91284A54AE9C38FD7CB16D9 /* Publisher+AutoReleaseSink.swift */,
 				32240A74FAE4B57B918E5E7479A2312D /* Publisher+Extensions.swift */,
 				3A6A93FD2AC9AEF5009301BB /* Publisher+Sequence.swift */,
-				5BD23074FC8BB33A92C0268D8880A350 /* PublisherToAsyncError.swift */,
+				5BD23074FC8BB33A92C0268D8880A350 /* CombineAsyncError.swift */,
 				3B35EDCB3F9483B83FA7F76A3E10615B /* Sequence+Extensions.swift */,
 				2BBAE3BC3C983172BC755D578C57CAE5 /* Pod */,
 				70592D8C6C97145258845DD8FC7DDEB9 /* Support Files */,
@@ -1063,7 +1063,7 @@
 				684BFE3C4603393B16938FBB825E4204 /* Future+Extensions.swift in Sources */,
 				C0960B7CB02062982534F8D5596FFE33 /* Publisher+AutoReleaseSink.swift in Sources */,
 				9ECA7AEDECCC76785978E3F00E4A8F9E /* Publisher+Extensions.swift in Sources */,
-				056B565759ACBF0ECF5EA38976F68B87 /* PublisherToAsyncError.swift in Sources */,
+				056B565759ACBF0ECF5EA38976F68B87 /* CombineAsyncError.swift in Sources */,
 				3A6A93FE2AC9AEF5009301BB /* Publisher+Sequence.swift in Sources */,
 				3A8A62EB2AC5CDB800240606 /* Publisher+Async.swift in Sources */,
 				C2E41CBE1FFA1AC34A02CD624391A8EC /* Sequence+Extensions.swift in Sources */,
