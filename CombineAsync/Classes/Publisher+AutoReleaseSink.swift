@@ -82,7 +82,10 @@ extension Publisher {
             var cancellable: AnyCancellable?
             var deallocateCancellable: AnyCancellable?
             var timerCancellable: AnyCancellable?
+            var isReleased: Bool = false
             func release() {
+                guard !isReleased else { return }
+                isReleased = true
                 deallocateCancellable?.cancel()
                 timerCancellable?.cancel()
                 cancellable?.cancel()
@@ -91,18 +94,20 @@ extension Publisher {
                 cancellable = nil
             }
             cancellable = sink { completion in
-                receiveCompletion(completion)
+                guard !isReleased else { return }
                 release()
+                receiveCompletion(completion)
             } receiveValue: { value in
                 receiveValue(value)
             }
             deallocateCancellable = deallocatePublisher(of: object)
                 .sink(receiveValue: release)
-            if let timeout = timeout, timeout > 0 {
-                timerCancellable = Timer.publish(every: timeout, on: .current, in: .common)
+            if let timeout, timeout > 0 {
+                timerCancellable = Timer.publish(every: timeout, on: .main, in: .default)
                     .autoconnect()
                     .sink { _ in
                         release()
+                        receiveCompletion(.finished)
                     }
             }
             return AutoReleaseCancellable(cancellable: cancellable, cancelTask: release)
@@ -126,23 +131,28 @@ extension Publisher {
             }
             var cancellable: AnyCancellable?
             var timerCancellable: AnyCancellable?
+            var isReleased: Bool = false
             func release() {
+                guard !isReleased else { return }
+                isReleased = true
                 timerCancellable?.cancel()
                 cancellable?.cancel()
                 timerCancellable = nil
                 cancellable = nil
             }
             cancellable = sink { completion in
-                receiveCompletion(completion)
+                guard !isReleased else { return }
                 release()
+                receiveCompletion(completion)
             } receiveValue: { value in
                 receiveValue(value)
             }
             if timeout > 0 {
-                timerCancellable = Timer.publish(every: timeout, on: .current, in: .common)
+                timerCancellable = Timer.publish(every: timeout, on: .main, in: .default)
                     .autoconnect()
                     .sink { _ in
                         release()
+                        receiveCompletion(.finished)
                     }
             }
             return AutoReleaseCancellable(cancellable: cancellable, cancelTask: release)
