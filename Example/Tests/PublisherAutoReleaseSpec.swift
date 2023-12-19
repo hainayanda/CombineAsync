@@ -84,7 +84,7 @@ class PublisherAutoReleaseSpec: QuickSpec {
             waitUntil { done in
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: done)
             }
-            expect(completion).to(beNil())
+            expect(completion).to(equal(.finished))
             expect(cancellable.state).to(equal(.released))
         }
     }
