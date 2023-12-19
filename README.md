@@ -75,6 +75,9 @@ let result = await publisher.sinkAsynchronously()
 
 // Specify a timeout explicitly
 let timedResult = await publisher.sinkAsynchronously(timeout: 1)
+
+// No timeout
+let noTimeoutResult = await publisher.sinkAsynchronously(timeout: .none)
 ```
 
 ### Sequence of Publisher to an Array of Output
@@ -89,7 +92,7 @@ let results = await arrayOfPublishers.sinkAsynchronously()
 let timedResults = await arrayOfPublishers.sinkAsynchronously(timeout: 1)
 
 // No timeout
-let timedResults = await arrayOfPublishers.sinkAsynchronously(timeout: .none)
+let noTimeoutResult = await arrayOfPublishers.sinkAsynchronously(timeout: .none)
 ```
 
 ### Future from Async
