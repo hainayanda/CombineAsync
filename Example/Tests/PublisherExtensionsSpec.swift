@@ -70,6 +70,55 @@ class PublisherExtensionsSyncSpec: QuickSpec {
     
     // swiftlint:disable function_body_length
     override class func spec() {
+        describe("assign") {
+            var subject: PassthroughSubject<Int, Never>!
+            var object: DummyObject!
+            context("weak") {
+                var cancellable: AnyCancellable?
+                beforeEach {
+                    subject = .init()
+                    object = .init()
+                }
+                afterEach {
+                    object = nil
+                    cancellable?.cancel()
+                    cancellable = nil
+                }
+                it("should not retain the object") {
+                    weak var weakRef = object
+                    cancellable = subject.weakAssign(to: \.number, on: object)
+                    object = nil
+                    expect(weakRef).to(beNil())
+                }
+                it("should assign the value to the object") {
+                    cancellable = subject.weakAssign(to: \.number, on: object)
+                    let toAssign = Int.random(in: 0..<100)
+                    subject.send(toAssign)
+                    expect(object.number).toEventually(equal(toAssign))
+                }
+            }
+            context("auto release") {
+                beforeEach {
+                    subject = .init()
+                    object = .init()
+                }
+                afterEach {
+                    object = nil
+                }
+                it("should not retain the object") {
+                    weak var weakRef = object
+                    subject.autoReleaseAssign(to: \.number, on: object)
+                    object = nil
+                    expect(weakRef).to(beNil())
+                }
+                it("should assign the value to the object") {
+                    subject.autoReleaseAssign(to: \.number, on: object)
+                    let toAssign = Int.random(in: 0..<100)
+                    subject.send(toAssign)
+                    expect(object.number).toEventually(equal(toAssign))
+                }
+            }
+        }
         describe("error replacement") {
             var subject: PassthroughSubject<Int, TestError>!
             var result: ResultWrapper<Int, TestError>!
@@ -134,4 +183,8 @@ class PublisherExtensionsSyncSpec: QuickSpec {
         }
     }
     // swiftlint:enable function_body_length
+}
+
+private class DummyObject {
+    var number: Int = 0
 }

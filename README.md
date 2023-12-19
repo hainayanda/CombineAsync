@@ -130,6 +130,18 @@ publisher.autoReleaseSink(retainedTo: self, timeout: 60) { _ in
 }
 ```
 
+### Weak and Auto Release Assign
+
+Assign without retaining the class instance by using `autoReleaseAssign` or `weakAssign` instead of assign:
+
+```swift
+// with cancellable
+let cancellable = publisher.weakAssign(to: \.property, on: object)
+
+// with auto release cancellable
+publisher.autoReleaseAssign(to: \.property, on: object)
+```
+
 ### Publisher error recovery
 
 Recover from errors using three different methods:

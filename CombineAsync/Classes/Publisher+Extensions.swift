@@ -114,4 +114,27 @@ extension Publisher where Failure == Never {
     public func sinkAsynchronously(timeout: TimeInterval = 30) async -> Output? {
         return try? await sinkAsync(with: timeout)
     }
+    
+    /// Assigns each element from a publisher to a property on an class instances object. Different from assign, it will store the object using weak variable so it will not retain the object.
+    /// - Parameters:
+    ///   - keyPath: A key path that indicates the property to assign.
+    ///   - object: The object that contains the property. The subscriber assigns the object’s property every time it receives a new value.
+    /// - Returns: An ``AnyCancellable`` instance.
+    @inlinable public func weakAssign<Root: AnyObject>(to keyPath: ReferenceWritableKeyPath<Root, Output>, on object: Root) -> AnyCancellable {
+        sink { [weak object] output in
+            object?[keyPath: keyPath] = output
+        }
+    }
+    
+    @discardableResult
+    /// Assigns each element from a publisher to a property on an class instances object. Different from assign, it will store the object using weak variable so it will not retain the object. It will automatically cancel the cancellable when object is released
+    /// - Parameters:
+    ///   - keyPath: A key path that indicates the property to assign.
+    ///   - object: The object that contains the property. The subscriber assigns the object’s property every time it receives a new value.
+    /// - Returns: An ``AnyCancellable`` instance.
+    @inlinable public func autoReleaseAssign<Root: AnyObject>(to keyPath: ReferenceWritableKeyPath<Root, Output>, on object: Root) -> RetainStateCancellable {
+        autoReleaseSink(retainedTo: object) { [weak object] output in
+            object?[keyPath: keyPath] = output
+        }
+    }
 }
