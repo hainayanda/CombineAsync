@@ -82,10 +82,14 @@ let timedResult = await publisher.sinkAsynchronously(timeout: 1)
 Convert a sequence of `Publisher` into async with a single call:
 
 ```swift
+// Default timeout 30 second
 let results = await arrayOfPublishers.sinkAsynchronously()
 
 // Specify a timeout
 let timedResults = await arrayOfPublishers.sinkAsynchronously(timeout: 1)
+
+// No timeout
+let timedResults = await arrayOfPublishers.sinkAsynchronously(timeout: .none)
 ```
 
 ### Future from Async
