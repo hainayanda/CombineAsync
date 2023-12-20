@@ -85,7 +85,7 @@ let noTimeoutResult = await publisher.sinkAsynchronously(timeout: .none)
 Convert a sequence of `Publisher` into async with a single call:
 
 ```swift
-// Default timeout 30 second
+// Implicitly await with a 30-second timeout
 let results = await arrayOfPublishers.sinkAsynchronously()
 
 // Specify a timeout
@@ -112,6 +112,19 @@ Execute asynchronous code inside a sink without explicitly creating a `Task`:
 ```swift
 publisher.asyncSink { output in
     await somethingAsync(output)
+}
+```
+
+### withCheckedThrowingContinuation with timeout
+
+Convert old asynchronous code using `withCheckedThrowingContinuation` with timeout:
+
+```swift
+// Automatically fail after 30 seconds
+try await withCheckedThrowingContinuation(timeout: 30) { continuation in
+    doLongOperation { result in
+        continuation.resume(returning: result)
+    }
 }
 ```
 

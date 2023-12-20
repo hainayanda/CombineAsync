@@ -44,6 +44,7 @@
 		35BA70EE3A5672C5167EEE9A9CCDB579 /* Pods-CombineAsync_Tests-dummy.m in Sources */ = {isa = PBXBuildFile; fileRef = 651662FB3D782D6B6FE6C6A4DC4AD2A9 /* Pods-CombineAsync_Tests-dummy.m */; };
 		392CF712183B952A49FB4F7BDF083E41 /* DSL.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C42470B0E6C1A93AD67AEBD80FB54A8 /* DSL.swift */; settings = {COMPILER_FLAGS = "-DPRODUCT_NAME=Nimble/Nimble"; }; };
 		3A6A93FE2AC9AEF5009301BB /* Publisher+Sequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A6A93FD2AC9AEF5009301BB /* Publisher+Sequence.swift */; };
+		3A7A13422B31E50800D57928 /* AsyncTaskHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A7A13412B31E50800D57928 /* AsyncTaskHelper.swift */; };
 		3A8A62EB2AC5CDB800240606 /* Publisher+Async.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A8A62EA2AC5CDB800240606 /* Publisher+Async.swift */; };
 		3D7673C6D02F40196D5E8A9C2D854C56 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CA8B94E9D3B433157168D1EECCEC11CD /* Foundation.framework */; };
 		3D91096FC812D66378F048B84449CEF6 /* QCKConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE9CFB7DFB83A6D085F36CF86DDD7A5A /* QCKConfiguration.swift */; };
@@ -254,6 +255,7 @@
 		396D3CE88222BB7302E778C303BD9EF1 /* Retain */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = Retain; path = Retain.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		39FC69859FA511DFBA91E13A3623637B /* Quick.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = Quick.h; path = Sources/QuickObjectiveC/Quick.h; sourceTree = "<group>"; };
 		3A6A93FD2AC9AEF5009301BB /* Publisher+Sequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Publisher+Sequence.swift"; path = "CombineAsync/Classes/Publisher+Sequence.swift"; sourceTree = "<group>"; };
+		3A7A13412B31E50800D57928 /* AsyncTaskHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AsyncTaskHelper.swift; path = CombineAsync/Classes/AsyncTaskHelper.swift; sourceTree = "<group>"; };
 		3A8A62EA2AC5CDB800240606 /* Publisher+Async.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Publisher+Async.swift"; path = "CombineAsync/Classes/Publisher+Async.swift"; sourceTree = "<group>"; };
 		3B35EDCB3F9483B83FA7F76A3E10615B /* Sequence+Extensions.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = "Sequence+Extensions.swift"; path = "CombineAsync/Classes/Sequence+Extensions.swift"; sourceTree = "<group>"; };
 		3B55F2D7601E4AFA4179DB8FFC9D1E12 /* CombineAsync.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = CombineAsync.release.xcconfig; sourceTree = "<group>"; };
@@ -743,6 +745,7 @@
 		A1A4126758D06AB4DDFAEB36A9A2DD73 /* CombineAsync */ = {
 			isa = PBXGroup;
 			children = (
+				3A7A13412B31E50800D57928 /* AsyncTaskHelper.swift */,
 				CEF0290DB677796F37CA161D51B8223B /* Future+Extensions.swift */,
 				3A8A62EA2AC5CDB800240606 /* Publisher+Async.swift */,
 				BB22674AB91284A54AE9C38FD7CB16D9 /* Publisher+AutoReleaseSink.swift */,
@@ -1066,6 +1069,7 @@
 				056B565759ACBF0ECF5EA38976F68B87 /* CombineAsyncError.swift in Sources */,
 				3A6A93FE2AC9AEF5009301BB /* Publisher+Sequence.swift in Sources */,
 				3A8A62EB2AC5CDB800240606 /* Publisher+Async.swift in Sources */,
+				3A7A13422B31E50800D57928 /* AsyncTaskHelper.swift in Sources */,
 				C2E41CBE1FFA1AC34A02CD624391A8EC /* Sequence+Extensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
