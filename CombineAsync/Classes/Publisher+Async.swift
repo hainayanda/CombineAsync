@@ -12,18 +12,30 @@ private actor AtomicRunner {
     var busy: Bool = false
     var pendingRunner: (() async -> Void)?
     
-    func runWhenFree(_ runner: @Sendable @escaping () async -> Void) async {
-        guard !busy else {
-            pendingRunner = runner
-            return
+    func runWhenFree(
+        priority: TaskPriority? = nil,
+        _ runner: @Sendable @escaping () async -> Void) {
+            guard !busy else {
+                pendingRunner = runner
+                return
+            }
+            busy = true
+            Task.detached(priority: priority) {
+                await runner()
+                while let pendingRunner = await self.pendingRunner {
+                    await self.clearPendingRunner()
+                    await pendingRunner()
+                }
+                await self.markAsNotBusy()
+            }
         }
-        busy = true
-        await runner()
-        if let pendingRunner {
-            self.pendingRunner = nil
-            await pendingRunner()
-        }
-        busy = false
+    
+    func clearPendingRunner() {
+        self.pendingRunner = nil
+    }
+    
+    func markAsNotBusy() {
+        self.busy = false
     }
 }
 
@@ -44,11 +56,11 @@ extension Publisher {
         receiveValue: @Sendable @escaping (Output) async -> Void) -> AnyCancellable {
             let runner = AtomicRunner()
             return asyncSink(priority: priority) { completion in
-                await runner.runWhenFree {
+                await runner.runWhenFree(priority: priority) {
                     await receiveCompletion(completion)
                 }
             } receiveValue: { output in
-                await runner.runWhenFree {
+                await runner.runWhenFree(priority: priority) {
                     await receiveValue(output)
                 }
             }
