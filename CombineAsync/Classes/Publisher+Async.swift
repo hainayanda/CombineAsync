@@ -11,27 +11,41 @@ import Combine
 private actor AtomicRunner {
     var busy: Bool = false
     var pendingRunner: (() async -> Void)?
+    var pendingCompletion: (() async -> Void)?
     
     func runWhenFree(
         priority: TaskPriority? = nil,
+        isCompletion: Bool = false,
         _ runner: @Sendable @escaping () async -> Void) {
             guard !busy else {
-                pendingRunner = runner
+                if isCompletion {
+                    pendingCompletion = runner
+                } else {
+                    pendingRunner = runner
+                }
                 return
             }
             busy = true
-            Task.detached(priority: priority) {
+            Task(priority: priority) {
                 await runner()
-                while let pendingRunner = await self.pendingRunner {
-                    await self.clearPendingRunner()
+                while let pendingRunner = self.dequePendingRunner() {
                     await pendingRunner()
                 }
-                await self.markAsNotBusy()
+                await self.dequePendingCompletion()?()
+                self.markAsNotBusy()
             }
         }
     
-    func clearPendingRunner() {
+    func dequePendingCompletion() -> (() async -> Void)? {
+        let pendingCompletion = self.pendingCompletion
+        self.pendingCompletion = nil
+        return pendingCompletion
+    }
+    
+    func dequePendingRunner() -> (() async -> Void)? {
+        let pendingRunner = self.pendingRunner
         self.pendingRunner = nil
+        return pendingRunner
     }
     
     func markAsNotBusy() {
@@ -56,7 +70,7 @@ extension Publisher {
         receiveValue: @Sendable @escaping (Output) async -> Void) -> AnyCancellable {
             let runner = AtomicRunner()
             return asyncSink(priority: priority) { completion in
-                await runner.runWhenFree(priority: priority) {
+                await runner.runWhenFree(priority: priority, isCompletion: true) {
                     await receiveCompletion(completion)
                 }
             } receiveValue: { output in
