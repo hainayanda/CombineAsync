@@ -17,6 +17,16 @@ enum Ignorable<Output> {
 
 extension Publisher {
     
+    /// Return a new publisher which publish current and previous value if have any
+    /// - Returns: New publisher of optional previous and current value
+    @inlinable public func withPrevious() -> Publishers.Map<Self, (previous: Output?, current: Output)> {
+        var previous: Output?
+        return map { current in
+            defer { previous = current }
+            return (previous, current)
+        }
+    }
+    
     /// Return this publisher first output asynchronously or rethrow error if occurss
     /// and throw error if its finished without value
     /// or reach timeout
