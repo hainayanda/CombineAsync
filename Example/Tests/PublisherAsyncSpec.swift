@@ -46,7 +46,7 @@ class PublisherAsyncSpec: QuickSpec {
         it("should sink asynchronously with debounce behavior") {
             let sinkOutputs: Wrapper<[Int]> = .init(value: [])
             cancellable = subject.debounceAsyncSink { _ in } receiveValue: { output in
-                try? await Task.sleep(nanoseconds: 1000_000)
+                try? await Task.sleep(nanoseconds: 1_000_000)
                 sinkOutputs.value.append(output)
             }
             subject.send(1)

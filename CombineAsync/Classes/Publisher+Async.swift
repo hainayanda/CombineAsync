@@ -11,19 +11,45 @@ import Combine
 private actor AtomicRunner {
     var busy: Bool = false
     var pendingRunner: (() async -> Void)?
+    var pendingCompletion: (() async -> Void)?
     
-    func runWhenFree(_ runner: @Sendable @escaping () async -> Void) async {
-        guard !busy else {
-            pendingRunner = runner
-            return
+    func runWhenFree(
+        priority: TaskPriority? = nil,
+        isCompletion: Bool = false,
+        _ runner: @Sendable @escaping () async -> Void) {
+            guard !busy else {
+                if isCompletion {
+                    pendingCompletion = runner
+                } else {
+                    pendingRunner = runner
+                }
+                return
+            }
+            busy = true
+            Task(priority: priority) {
+                await runner()
+                while let pendingRunner = self.dequePendingRunner() {
+                    await pendingRunner()
+                }
+                await self.dequePendingCompletion()?()
+                self.markAsNotBusy()
+            }
         }
-        busy = true
-        await runner()
-        if let pendingRunner {
-            self.pendingRunner = nil
-            await pendingRunner()
-        }
-        busy = false
+    
+    func dequePendingCompletion() -> (() async -> Void)? {
+        let pendingCompletion = self.pendingCompletion
+        self.pendingCompletion = nil
+        return pendingCompletion
+    }
+    
+    func dequePendingRunner() -> (() async -> Void)? {
+        let pendingRunner = self.pendingRunner
+        self.pendingRunner = nil
+        return pendingRunner
+    }
+    
+    func markAsNotBusy() {
+        self.busy = false
     }
 }
 
@@ -44,11 +70,11 @@ extension Publisher {
         receiveValue: @Sendable @escaping (Output) async -> Void) -> AnyCancellable {
             let runner = AtomicRunner()
             return asyncSink(priority: priority) { completion in
-                await runner.runWhenFree {
+                await runner.runWhenFree(priority: priority, isCompletion: true) {
                     await receiveCompletion(completion)
                 }
             } receiveValue: { output in
-                await runner.runWhenFree {
+                await runner.runWhenFree(priority: priority) {
                     await receiveValue(output)
                 }
             }
