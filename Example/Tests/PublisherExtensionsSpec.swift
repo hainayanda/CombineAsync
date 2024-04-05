@@ -26,19 +26,19 @@ class PublisherExtensionsAsyncSpec: AsyncSpec {
                 }
                 it("should successfully return value") {
                     subject.sendAfter(0.1, input: 10_000)
-                    await expect { try await subject.sinkAsynchronously() }.to(equal(10_000))
+                    await expect { try await subject.waitForOutputIndefinitely() }.to(equal(10_000))
                 }
                 it("should throw expected error") {
                     subject.sendAfter(0.1, completion: .failure(.expectedError))
-                    await expect { try await subject.sinkAsynchronously() }.to(throwError(TestError.expectedError))
+                    await expect { try await subject.waitForOutputIndefinitely() }.to(throwError(TestError.expectedError))
                 }
                 it("should throw no value error") {
                     subject.sendAfter(0.1, completion: .finished)
-                    await expect { try await subject.sinkAsynchronously() }.to(throwError(CombineAsyncError.finishedButNoValue))
+                    await expect { try await subject.waitForOutputIndefinitely() }.to(throwError(CombineAsyncError.finishedButNoValue))
                 }
                 it("should throw timeout error") {
                     subject.sendAfter(0.2, input: 10_000)
-                    await expect { try await subject.sinkAsynchronously(timeout: 0.1) }.to(throwError(CombineAsyncError.timeout))
+                    await expect { try await subject.waitForOutput(timeout: 0.1) }.to(throwError(CombineAsyncError.timeout))
                 }
             }
             context("without error") {
@@ -51,15 +51,15 @@ class PublisherExtensionsAsyncSpec: AsyncSpec {
                 }
                 it("should successfully return value") {
                     subject.sendAfter(0.1, input: 10_000)
-                    await expect { await subject.sinkAsynchronously() }.to(equal(10_000))
+                    await expect { await subject.waitForOutputIndefinitely() }.to(equal(10_000))
                 }
                 it("should ignore no value error") {
                     subject.sendAfter(0.1, completion: .finished)
-                    await expect { await subject.sinkAsynchronously() }.to(beNil())
+                    await expect { await subject.waitForOutputIndefinitely() }.to(beNil())
                 }
                 it("should ignore timeout error") {
                     subject.sendAfter(0.2, input: 10_000)
-                    await expect { await subject.sinkAsynchronously(timeout: 0.1) }.to(beNil())
+                    await expect { await subject.waitForOutput(timeout: 0.1) }.to(beNil())
                 }
             }
         }

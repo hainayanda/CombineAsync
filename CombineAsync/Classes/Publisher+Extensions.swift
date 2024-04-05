@@ -17,6 +17,26 @@ enum Ignorable<Output> {
 
 extension Publisher {
     
+    @discardableResult
+    /// Return Future publisher that will be call sink on this publisher completion
+    /// - Returns: new Future publisher
+    @inlinable public func justCompletion() -> AnyPublisher<Void, Failure> {
+        return Future { promise in
+            var cancellable: AnyCancellable?
+            cancellable = self.sink { completion in
+                cancellable?.cancel()
+                cancellable = nil
+                switch completion {
+                case .finished:
+                    promise(.success(Void()))
+                case .failure(let error):
+                    promise(.failure(error))
+                }
+            } receiveValue: { _ in }
+        }
+        .eraseToAnyPublisher()
+    }
+    
     /// Return a new publisher which publish current and previous value if have any
     /// - Returns: New publisher of optional previous and current value
     @inlinable public func withPrevious() -> Publishers.Map<Self, (previous: Output?, current: Output)> {
@@ -33,8 +53,16 @@ extension Publisher {
     /// or fail to produce an output
     /// - Parameter timeout: timeout in second, by default is 30 seconds
     /// - Returns: first output
-    public func sinkAsynchronously(timeout: TimeInterval = 30) async throws -> Output {
+    public func waitForOutput(timeout: TimeInterval) async throws -> Output {
         return try await autoReleaseSinkAsync(timeout: timeout)
+    }
+    
+    /// Return this publisher first output asynchronously or rethrow error if occurss
+    /// and throw error if its finished without value
+    /// or fail to produce an output
+    /// - Returns: first output
+    public func waitForOutputIndefinitely() async throws -> Output {
+        return try await autoReleaseSinkAsync()
     }
     
     /// Return a new publisher will ignore the error
@@ -79,25 +107,68 @@ extension Publisher {
     
     // MARK: Internal methods
     
-    func autoReleaseSinkAsync(timeout: TimeInterval) async throws -> Self.Output {
-        guard timeout != 0 else { throw CombineAsyncError.timeout }
-        let callingTime = Date()
+    @inlinable func autoReleaseSinkAsync() async throws -> Self.Output {
         return try await withCheckedThrowingContinuation { continuation in
             var valueReceived = false
-            first().autoReleaseSink(timeout: timeout) { result in
+            var cancellable: AnyCancellable?
+            let semaphore = DispatchSemaphore(value: 1)
+            func release() {
+                cancellable?.cancel()
+                cancellable = nil
+            }
+            cancellable = autoReleaseSink { result in
+                semaphore.wait()
+                defer { semaphore.signal() }
                 switch result {
                 case .finished:
-                    if !valueReceived {
-                        let isTimeout = Date().timeIntervalSince(callingTime) >= timeout
-                        continuation.resume(throwing: isTimeout ? CombineAsyncError.timeout: CombineAsyncError.finishedButNoValue)
-                    }
+                    guard !valueReceived else { return }
+                    release()
+                    continuation.resume(throwing: CombineAsyncError.finishedButNoValue)
                 case let .failure(error):
+                    release()
                     continuation.resume(throwing: error)
                 }
             } receiveValue: { value in
+                semaphore.wait()
+                defer { semaphore.signal() }
                 valueReceived = true
+                release()
                 continuation.resume(returning: value)
             }
+        }
+    }
+    
+    @inlinable func autoReleaseSinkAsync(timeout: TimeInterval) async throws -> Self.Output {
+        let callingTime = Date()
+        return try await withCheckedThrowingContinuation { continuation in
+            var valueReceived = false
+            var cancellable: AnyCancellable?
+            let semaphore = DispatchSemaphore(value: 1)
+            func release() {
+                cancellable?.cancel()
+                cancellable = nil
+            }
+            cancellable = autoReleaseSink(timeout: timeout) { result in
+                semaphore.wait()
+                defer { semaphore.signal() }
+                switch result {
+                case .finished:
+                    guard !valueReceived else { return }
+                    let isTimeout = Date().timeIntervalSince(callingTime) >= timeout
+                    release()
+                    continuation.resume(throwing: isTimeout ? CombineAsyncError.timeout: CombineAsyncError.finishedButNoValue)
+                case let .failure(error):
+                    release()
+                    continuation.resume(throwing: error)
+                }
+            } receiveValue: { value in
+                semaphore.wait()
+                defer { semaphore.signal() }
+                valueReceived = true
+                release()
+                continuation.resume(returning: value)
+            }
+            .eraseToAnyCancellable()
         }
     }
 }
@@ -107,8 +178,14 @@ extension Publisher where Failure == Never {
     /// Return this publisher first output asynchronously and return nil if its finished without value
     /// - Parameter timeout: timeout in second, by default is 30 seconds
     /// - Returns: first output
-    public func sinkAsynchronously(timeout: TimeInterval = 30) async -> Output? {
+    public func waitForOutput(timeout: TimeInterval) async -> Output? {
         return try? await autoReleaseSinkAsync(timeout: timeout)
+    }
+    
+    /// Return this publisher first output asynchronously and return nil if its finished without value
+    /// - Returns: first output
+    public func waitForOutputIndefinitely() async -> Output? {
+        return try? await autoReleaseSinkAsync()
     }
     
     /// Assigns each element from a publisher to a property on an class instances object. Different from assign, it will store the object using weak variable so it will not retain the object.

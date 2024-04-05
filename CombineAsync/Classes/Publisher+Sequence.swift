@@ -13,7 +13,7 @@ extension Publisher where Output: Sequence {
     /// Map the Output element to another element
     /// - Parameter transformSequence: Closure that accept each element from output and return the transformation result
     /// - Returns: AnyPublisher of Array of new element with same Failure type
-    public func mapSequence<T>(_ transformSequence: @escaping (Output.Element) -> T) -> AnyPublisher<[T], Self.Failure> {
+    @inlinable public func mapSequence<T>(_ transformSequence: @escaping (Output.Element) -> T) -> AnyPublisher<[T], Self.Failure> {
         map { $0.map(transformSequence) }
             .eraseToAnyPublisher()
     }
@@ -22,7 +22,7 @@ extension Publisher where Output: Sequence {
     /// It will ignore the nil output from the closure result
     /// - Parameter transformSequence: Closure that accept each element from output and return the transformation optional result
     /// - Returns: AnyPublisher of Array of new element with same Failure type
-    public func compactMapSequence<T>(_ transformSequence: @escaping (Output.Element) -> T?) -> AnyPublisher<[T], Self.Failure> {
+    @inlinable public func compactMapSequence<T>(_ transformSequence: @escaping (Output.Element) -> T?) -> AnyPublisher<[T], Self.Failure> {
         map { $0.compactMap(transformSequence) }
             .eraseToAnyPublisher()
     }
@@ -30,7 +30,7 @@ extension Publisher where Output: Sequence {
     /// Try map the Output element to another element
     /// - Parameter transformSequence: Throwing closure that accept each element from output and return the transformation result
     /// - Returns: AnyPublisher of Array of new element with same Error as Failure  type
-    public func tryMapSequence<T>(_ transformSequence: @escaping (Output.Element) throws -> T) -> AnyPublisher<[T], Error> {
+    @inlinable public func tryMapSequence<T>(_ transformSequence: @escaping (Output.Element) throws -> T) -> AnyPublisher<[T], Error> {
         mapError { $0 }
             .tryMap { try $0.map(transformSequence) }
             .eraseToAnyPublisher()
@@ -39,7 +39,7 @@ extension Publisher where Output: Sequence {
     /// Try compact map the Output element to another element.
     /// - Parameter transformSequence: Throwing closure that accept each element from output and return the transformation optional result
     /// - Returns: AnyPublisher of Array of new element with same Error as Failure  type
-    public func tryCompactMapSequence<T>(_ transformSequence: @escaping (Output.Element) throws -> T?) -> AnyPublisher<[T], Error> {
+    @inlinable public func tryCompactMapSequence<T>(_ transformSequence: @escaping (Output.Element) throws -> T?) -> AnyPublisher<[T], Error> {
         mapError { $0 }
             .tryMap { try $0.compactMap(transformSequence) }
             .eraseToAnyPublisher()

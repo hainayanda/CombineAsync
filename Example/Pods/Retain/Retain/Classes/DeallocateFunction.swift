@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-private var retainDeallocateKey: String = "retainDeallocateKey"
+private var retainDeallocateKey = malloc(1)
 
 /// Return publisher that publish event of the given object deallocation event
 /// - Parameter object: Object

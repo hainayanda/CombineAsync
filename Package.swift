@@ -3,6 +3,34 @@
 
 import PackageDescription
 
+// mark this as true on development
+let development: Bool = false
+
+let targetDependencies: [Package.Dependency] = [
+    .package(url: "https://github.com/hainayanda/Retain.git", from: "1.0.2")
+]
+let testDependencies: [Package.Dependency] = [
+    .package(url: "https://github.com/Quick/Quick.git", from: "7.0.0"),
+    .package(url: "https://github.com/Quick/Nimble.git", from: "12.0.0")
+]
+
+let productTarget: PackageDescription.Target = .target(
+    name: "CombineAsync",
+    dependencies: ["Retain"],
+    path: "CombineAsync/Classes"
+)
+let testTarget: PackageDescription.Target = .testTarget(
+    name: "CombineAsyncTests",
+    dependencies: [
+        "CombineAsync", "Quick", "Nimble"
+    ],
+    path: "Example/Tests",
+    exclude: ["Info.plist"]
+)
+
+let dependencies = development ? (targetDependencies + testDependencies) : targetDependencies
+let targets = development ? [productTarget, testTarget] : [productTarget]
+
 let package = Package(
     name: "CombineAsync",
     platforms: [
@@ -17,26 +45,6 @@ let package = Package(
             targets: ["CombineAsync"]
         )
     ],
-    dependencies: [
-        .package(url: "https://github.com/hainayanda/Retain.git", from: "1.0.1"),
-        // uncomment code below to test
-//        .package(url: "https://github.com/Quick/Quick.git", from: "7.0.0"),
-//        .package(url: "https://github.com/Quick/Nimble.git", from: "12.0.0")
-    ],
-    targets: [
-        .target(
-            name: "CombineAsync",
-            dependencies: ["Retain"],
-            path: "CombineAsync/Classes"
-        ),
-        // uncomment code below to test
-//        .testTarget(
-//            name: "CombineAsyncTests",
-//            dependencies: [
-//                "CombineAsync", "Quick", "Nimble"
-//            ],
-//            path: "Example/Tests",
-//            exclude: ["Info.plist"]
-//        )
-    ]
+    dependencies: dependencies,
+    targets: targets
 )

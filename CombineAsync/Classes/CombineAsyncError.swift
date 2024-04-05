@@ -9,8 +9,16 @@ import Foundation
 
 public typealias PublisherToAsyncError = CombineAsyncError
 
-public enum CombineAsyncError: Error {
+public enum CombineAsyncError: Error, CustomStringConvertible {
     case finishedButNoValue
     case timeout
-    case failToProduceAnOutput
+    
+    @inlinable public var description: String {
+        switch self {
+        case .finishedButNoValue:
+            return "Publisher finished with no value"
+        case .timeout:
+            return "Publisher failed to emit value in certain timeout"
+        }
+    }
 }

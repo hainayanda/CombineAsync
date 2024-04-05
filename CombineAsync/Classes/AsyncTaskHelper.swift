@@ -8,32 +8,19 @@
 import Foundation
 import Combine
 
-actor Flag: ExpressibleByBooleanLiteral {
-    typealias BooleanLiteralType = Bool
-    
-    var wrapped: Bool
-    
-    init(booleanLiteral: Bool) {
-        self.wrapped = booleanLiteral
-    }
-    
-    func runIfMatchThenToggle(condition: Bool, runner: () -> Void) {
-        guard wrapped == condition else { return }
-        wrapped.toggle()
-        runner()
-    }
-}
-
 /// Atomic CheckedContinuation that will make sure the resume will only called once
-public final class AtomicContinuation<T, E>: Sendable where E: Error {
+public final class SingleCallContinuation<T, E> where E: Error {
     
     let continuation: CheckedContinuation<T, E>
-    let isValid: Flag = true
+    var isValid: Bool = true
+    let semaphore: DispatchSemaphore = .init(value: 1)
+    let onContinuationCalled: (() -> Void)?
     
-    public init(continuation: CheckedContinuation<T, E>) {
+    public init(continuation: CheckedContinuation<T, E>, onContinuationCalled: (() -> Void)? = nil) {
         self.continuation = continuation
+        self.onContinuationCalled = onContinuationCalled
     }
-
+    
     /// Resume the task awaiting the continuation by having it return normally
     /// from its suspension point.
     ///
@@ -45,13 +32,12 @@ public final class AtomicContinuation<T, E>: Sendable where E: Error {
     /// the caller. The task continues executing when its executor is
     /// able to reschedule it.
     public func resume(returning value: T) {
-        Task {
-            await isValid.runIfMatchThenToggle(condition: true) {
-                continuation.resume(returning: value)
-            }
+        runIfValid {
+            continuation.resume(returning: value)
+            onContinuationCalled?()
         }
     }
-
+    
     /// Resume the task awaiting the continuation by having it throw an error
     /// from its suspension point.
     ///
@@ -63,11 +49,24 @@ public final class AtomicContinuation<T, E>: Sendable where E: Error {
     /// the caller. The task continues executing when its executor is
     /// able to reschedule it.
     public func resume(throwing error: E) {
-        Task {
-            await isValid.runIfMatchThenToggle(condition: true) {
-                continuation.resume(throwing: error)
-            }
+        runIfValid {
+            continuation.resume(throwing: error)
+            onContinuationCalled?()
         }
+    }
+    
+    func runIfValid(_ task: () -> Void) {
+        semaphore.wait()
+        defer { semaphore.signal() }
+        guard isValid else { return }
+        isValid = false
+        task()
+    }
+}
+
+public extension SingleCallContinuation where T == Void {
+    @inlinable func resume() {
+        self.resume(returning: Void())
     }
 }
 
@@ -85,22 +84,29 @@ public final class AtomicContinuation<T, E>: Sendable where E: Error {
 ///
 /// - Parameters:
 ///   - body: A closure that takes a `AtomicContinuation` parameter.
+///   - onTimeout: A closure that will be called in event of timeout
 /// - Returns: The value continuation is resumed with.
-@inlinable public func withCheckedThrowingContinuation<T>(timeout: TimeInterval, _ body: (AtomicContinuation<T, Error>) -> Void) async throws -> T {
-    guard timeout != 0 else { throw CombineAsyncError.timeout }
-    guard timeout > 0 else {
-        return try await withCheckedThrowingContinuation { body(.init(continuation: $0)) }
-    }
-    return try await withCheckedThrowingContinuation { continuation in
-        let atomicContinuation = AtomicContinuation(continuation: continuation)
-        var timerCancellable: AnyCancellable?
-        timerCancellable = Timer.publish(every: timeout, on: .main, in: .default)
-            .autoconnect()
-            .sink { _ in
+@inlinable public func withCheckedThrowingContinuation<T>(
+    function: String = #function, timeout: TimeInterval,
+    _ body: (SingleCallContinuation<T, Error>) -> Void,
+    onTimeout: (() -> Void)? = nil) async throws -> T {
+        guard timeout > 0 else {
+            onTimeout?()
+            throw CombineAsyncError.timeout
+        }
+        return try await withCheckedThrowingContinuation(function: function) { continuation in
+            var timerCancellable: AnyCancellable?
+            let atomicContinuation = SingleCallContinuation(continuation: continuation) {
                 timerCancellable?.cancel()
                 timerCancellable = nil
-                atomicContinuation.resume(throwing: CombineAsyncError.timeout)
             }
-        body(atomicContinuation)
+            timerCancellable = Timer.publish(every: timeout, on: .main, in: .default)
+                .autoconnect()
+                .receive(on: DispatchQueue.main)
+                .sink { _ in
+                    onTimeout?()
+                    atomicContinuation.resume(throwing: CombineAsyncError.timeout)
+                }
+            body(atomicContinuation)
+        }
     }
-}

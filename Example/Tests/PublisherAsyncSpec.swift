@@ -20,7 +20,7 @@ private class Wrapper<Wrapped> {
     }
 }
 
-class PublisherAsyncSpec: QuickSpec {
+class PublisherAsyncSpec: AsyncSpec {
     
     override class func spec() {
         var subject: PassthroughSubject<Int, TestError>!
@@ -32,7 +32,7 @@ class PublisherAsyncSpec: QuickSpec {
         it("should sink asynchronously") {
             let sinkOutput: Wrapper<Int?> = .init(value: nil)
             let input: Int = .random(in: -100..<100)
-            waitUntil { done in
+            await waitUntil { done in
                 cancellable = subject.asyncSink { _ in } receiveValue: { output in
                     try await Task.sleep(nanoseconds: 10_000)
                     sinkOutput.value = output
@@ -46,7 +46,7 @@ class PublisherAsyncSpec: QuickSpec {
         it("should sink asynchronously with debounce behavior") {
             let sinkOutputs: Wrapper<[Int]> = .init(value: [])
             cancellable = subject.debounceAsyncSink { _ in } receiveValue: { output in
-                try? await Task.sleep(nanoseconds: 1_000_000)
+                try? await Task.sleep(nanoseconds: 1_000)
                 sinkOutputs.value.append(output)
             }
             subject.send(1)
@@ -54,7 +54,7 @@ class PublisherAsyncSpec: QuickSpec {
             subject.send(3)
             subject.send(4)
             subject.send(5)
-            expect(sinkOutputs.value).toEventually(equal([1, 5]))
+            await expect(sinkOutputs.value).toEventually(equal([1, 5]))
         }
     }
 }
@@ -69,19 +69,19 @@ class AsyncPublisherAsyncSpec: AsyncSpec {
             subject = .init(value)
         }
         it("should async map successfully") {
-            let output = try await subject.asyncMap(testMap).sinkAsynchronously()
+            let output = try await subject.asyncMap(testMap).waitForOutputIndefinitely()
             expect(output).to(equal("\(value!)"))
         }
         it("should async try map successfully") {
-            let output = try await subject.asyncTryMap(testTryMap).sinkAsynchronously()
+            let output = try await subject.asyncTryMap(testTryMap).waitForOutputIndefinitely()
             expect(output).to(equal("\(value!)"))
         }
         it("should async compact map successfully") {
-            let output = try await subject.asyncCompactMap(testCompactMap).sinkAsynchronously()
+            let output = try await subject.asyncCompactMap(testCompactMap).waitForOutputIndefinitely()
             expect(output).to(equal("\(value!)"))
         }
         it("should async try compact map successfully") {
-            let output = try await subject.asyncTryCompactMap(testTryCompactMap).sinkAsynchronously()
+            let output = try await subject.asyncTryCompactMap(testTryCompactMap).waitForOutputIndefinitely()
             expect(output).to(equal("\(value!)"))
         }
     }
