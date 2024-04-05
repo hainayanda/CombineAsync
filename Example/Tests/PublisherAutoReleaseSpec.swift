@@ -12,7 +12,7 @@ import Nimble
 import Combine
 import CombineAsync
 
-class PublisherAutoReleaseSpec: QuickSpec {
+class PublisherAutoReleaseSpec: AsyncSpec {
     
     // swiftlint:disable function_body_length
     override class func spec() {
@@ -23,34 +23,34 @@ class PublisherAutoReleaseSpec: QuickSpec {
         it("should release the cancellable after completion") {
             var completion: Subscribers.Completion<TestError>?
             var value: Int?
-            let cancellable = subject.autoReleaseSink { comp in
+            weak var cancellable = subject.autoReleaseSink { comp in
                 completion = comp
             } receiveValue: { val in
                 value = val
             }
-            expect(cancellable.state).to(equal(.retained))
+            expect(cancellable).toNot(beNil())
             subject.send(1)
-            expect(cancellable.state).to(equal(.retained))
-            expect(value).to(equal(1))
+            expect(cancellable).toNot(beNil())
+            await expect(value).toEventually(equal(1))
             subject.send(completion: .finished)
-            expect(completion).to(equal(.finished))
-            expect(cancellable.state).to(equal(.released))
+            await expect(completion).toEventually(equal(.finished))
+            expect(cancellable).to(beNil())
         }
         it("should release the cancellable after error") {
             var completion: Subscribers.Completion<TestError>?
             var value: Int?
-            let cancellable = subject.autoReleaseSink { comp in
+            weak var cancellable = subject.autoReleaseSink { comp in
                 completion = comp
             } receiveValue: { val in
                 value = val
             }
-            expect(cancellable.state).to(equal(.retained))
+            expect(cancellable).toNot(beNil())
             subject.send(1)
-            expect(cancellable.state).to(equal(.retained))
-            expect(value).to(equal(1))
+            expect(cancellable).toNot(beNil())
+            await expect(value).toEventually(equal(1))
             subject.send(completion: .failure(.expectedError))
-            expect(completion).to(equal(.failure(.expectedError)))
-            expect(cancellable.state).to(equal(.released))
+            await expect(completion).toEventually(equal(.failure(.expectedError)))
+            expect(cancellable).to(beNil())
         }
         it("should release the cancellable after object released") {
             var retaining: RetainingObject? = RetainingObject()
@@ -64,10 +64,10 @@ class PublisherAutoReleaseSpec: QuickSpec {
             expect(cancellable.state).to(equal(.retained))
             subject.send(1)
             expect(cancellable.state).to(equal(.retained))
-            expect(value).to(equal(1))
+            await expect(value).toEventually(equal(1))
             retaining = nil
             expect(completion).to(beNil())
-            expect(cancellable.state).to(equal(.released))
+            await expect(cancellable.state).toEventually(equal(.released))
         }
         it("should release the cancellable after timeout") {
             var completion: Subscribers.Completion<TestError>?
@@ -80,10 +80,8 @@ class PublisherAutoReleaseSpec: QuickSpec {
             expect(cancellable.state).to(equal(.retained))
             subject.send(1)
             expect(cancellable.state).to(equal(.retained))
-            expect(value).to(equal(1))
-            waitUntil { done in
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: done)
-            }
+            await expect(value).toEventually(equal(1))
+            try await Task.sleep(nanoseconds: 600_000_000)
             expect(completion).to(equal(.finished))
             expect(cancellable.state).to(equal(.released))
         }
