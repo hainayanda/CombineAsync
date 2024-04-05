@@ -125,7 +125,7 @@ extension Publisher where Failure == Never {
     /// When the sink is finished, then it will only execute the closure using the latest output that stored.
     /// - parameter receiveValue: The async closure to execute on receipt of a value.
     /// - Returns: A cancellable instance, which you use when you end assignment of the received value. Deallocation of the result will tear down the subscription stream.
-    public func debounceAsyncSink(priority: TaskPriority? = nil, receiveValue: @Sendable @escaping (Output) async throws -> Void) -> AnyCancellable {
+    @inlinable public func debounceAsyncSink(priority: TaskPriority? = nil, receiveValue: @Sendable @escaping (Output) async throws -> Void) -> AnyCancellable {
         self.debounceAsyncSink(priority: priority, receiveCompletion: { _ in }, receiveValue: receiveValue)
     }
     

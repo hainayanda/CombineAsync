@@ -107,7 +107,7 @@ extension Publisher {
     
     // MARK: Internal methods
     
-    func autoReleaseSinkAsync() async throws -> Self.Output {
+    @inlinable func autoReleaseSinkAsync() async throws -> Self.Output {
         return try await withCheckedThrowingContinuation { continuation in
             var valueReceived = false
             var cancellable: AnyCancellable?
@@ -138,7 +138,7 @@ extension Publisher {
         }
     }
     
-    func autoReleaseSinkAsync(timeout: TimeInterval) async throws -> Self.Output {
+    @inlinable func autoReleaseSinkAsync(timeout: TimeInterval) async throws -> Self.Output {
         let callingTime = Date()
         return try await withCheckedThrowingContinuation { continuation in
             var valueReceived = false

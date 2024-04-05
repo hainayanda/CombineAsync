@@ -13,7 +13,7 @@ public enum CombineAsyncError: Error, CustomStringConvertible {
     case finishedButNoValue
     case timeout
     
-    public var description: String {
+    @inlinable public var description: String {
         switch self {
         case .finishedButNoValue:
             return "Publisher finished with no value"

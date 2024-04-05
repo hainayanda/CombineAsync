@@ -28,7 +28,7 @@ public enum RetainState {
 class EmptyCancellable: RetainStateCancellable {
     let state: RetainState = .released
     
-    func cancel() { }
+    @inlinable func cancel() { }
 }
 
 public extension TimeInterval {
@@ -41,18 +41,18 @@ class AutoReleaseCancellable: RetainStateCancellable {
     
     var state: RetainState { cancellable == nil ? .released: .retained }
     
-    init(cancellable: AnyCancellable?) {
+    @inlinable init(cancellable: AnyCancellable?) {
         self.cancellable = cancellable
     }
     
-    func cancel() {
+    @inlinable func cancel() {
         cancellable?.cancel()
         cancellable = nil
     }
     
-    var deallocatePublisher: AnyPublisher<Void, Never> { $cancellable.deallocatePublisher }
+    @inlinable var deallocatePublisher: AnyPublisher<Void, Never> { $cancellable.deallocatePublisher }
     
-    func whenDeallocate(do operation: @escaping () -> Void) -> AnyCancellable {
+    @inlinable func whenDeallocate(do operation: @escaping () -> Void) -> AnyCancellable {
         $cancellable.whenDeallocate(do: operation)
     }
     
