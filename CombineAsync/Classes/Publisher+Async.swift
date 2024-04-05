@@ -8,51 +8,6 @@
 import Foundation
 import Combine
 
-private actor AtomicRunner {
-    var busy: Bool = false
-    var pendingRunner: (() async -> Void)?
-    var pendingCompletion: (() async -> Void)?
-    
-    func runWhenFree(
-        priority: TaskPriority? = nil,
-        isCompletion: Bool = false,
-        _ runner: @Sendable @escaping () async -> Void) {
-            guard !busy else {
-                if isCompletion {
-                    pendingCompletion = runner
-                } else {
-                    pendingRunner = runner
-                }
-                return
-            }
-            busy = true
-            Task(priority: priority) {
-                await runner()
-                while let pendingRunner = self.dequePendingRunner() {
-                    await pendingRunner()
-                }
-                await self.dequePendingCompletion()?()
-                self.markAsNotBusy()
-            }
-        }
-    
-    func dequePendingCompletion() -> (() async -> Void)? {
-        let pendingCompletion = self.pendingCompletion
-        self.pendingCompletion = nil
-        return pendingCompletion
-    }
-    
-    func dequePendingRunner() -> (() async -> Void)? {
-        let pendingRunner = self.pendingRunner
-        self.pendingRunner = nil
-        return pendingRunner
-    }
-    
-    func markAsNotBusy() {
-        self.busy = false
-    }
-}
-
 extension Publisher {
     
     /// Attaches a subscriber with async closure-based behavior.
@@ -66,16 +21,28 @@ extension Publisher {
     /// - Returns: A cancellable instance, which you use when you end assignment of the received value. Deallocation of the result will tear down the subscription stream.
     public func debounceAsyncSink(
         priority: TaskPriority? = nil,
-        receiveCompletion: @Sendable @escaping (Subscribers.Completion<Failure>) async -> Void,
-        receiveValue: @Sendable @escaping (Output) async -> Void) -> AnyCancellable {
-            let runner = AtomicRunner()
-            return asyncSink(priority: priority) { completion in
-                await runner.runWhenFree(priority: priority, isCompletion: true) {
-                    await receiveCompletion(completion)
+        receiveCompletion: @Sendable @escaping (Subscribers.Completion<Failure>) async throws -> Void,
+        receiveValue: @Sendable @escaping (Output) async throws -> Void) -> AnyCancellable {
+            let semaphore = DispatchSemaphore(value: 1)
+            let pendingWrappedOutput: Mutable<Output?> = .init(wrapped: nil)
+            return self.sink { completion in
+                semaphore.wait()
+                Task(priority: priority) {
+                    try? await receiveCompletion(completion)
+                    semaphore.signal()
                 }
             } receiveValue: { output in
-                await runner.runWhenFree(priority: priority) {
-                    await receiveValue(output)
+                guard case .success = semaphore.wait(timeout: .now()) else {
+                    pendingWrappedOutput.wrapped = output
+                    return
+                }
+                Task(priority: priority) {
+                    try? await receiveValue(output)
+                    while let pendingOutput = pendingWrappedOutput.wrapped {
+                        pendingWrappedOutput.wrapped = nil
+                        try? await receiveValue(pendingOutput)
+                    }
+                    semaphore.signal()
                 }
             }
         }
@@ -158,13 +125,8 @@ extension Publisher where Failure == Never {
     /// When the sink is finished, then it will only execute the closure using the latest output that stored.
     /// - parameter receiveValue: The async closure to execute on receipt of a value.
     /// - Returns: A cancellable instance, which you use when you end assignment of the received value. Deallocation of the result will tear down the subscription stream.
-    public func debounceAsyncSink(priority: TaskPriority? = nil, receiveValue: @Sendable @escaping (Output) async -> Void) -> AnyCancellable {
-        let runner = AtomicRunner()
-        return asyncSink(priority: priority) { output in
-            await runner.runWhenFree {
-                await receiveValue(output)
-            }
-        }
+    public func debounceAsyncSink(priority: TaskPriority? = nil, receiveValue: @Sendable @escaping (Output) async throws -> Void) -> AnyCancellable {
+        self.debounceAsyncSink(priority: priority, receiveCompletion: { _ in }, receiveValue: receiveValue)
     }
     
     /// Attaches a subscriber with async closure-based behavior.
@@ -178,5 +140,13 @@ extension Publisher where Failure == Never {
                 try await receiveValue(output)
             }
         }
+    }
+}
+
+private class Mutable<Wrapped> {
+    var wrapped: Wrapped
+    
+    init(wrapped: Wrapped) {
+        self.wrapped = wrapped
     }
 }
