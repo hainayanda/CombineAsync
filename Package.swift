@@ -20,8 +20,8 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/hainayanda/Retain.git", from: "1.0.2"),
         // uncomment code below to test
-        .package(url: "https://github.com/Quick/Quick.git", from: "7.0.0"),
-        .package(url: "https://github.com/Quick/Nimble.git", from: "12.0.0")
+//        .package(url: "https://github.com/Quick/Quick.git", from: "7.0.0"),
+//        .package(url: "https://github.com/Quick/Nimble.git", from: "12.0.0")
     ],
     targets: [
         .target(
@@ -30,13 +30,13 @@ let package = Package(
             path: "CombineAsync/Classes"
         ),
         // uncomment code below to test
-        .testTarget(
-            name: "CombineAsyncTests",
-            dependencies: [
-                "CombineAsync", "Quick", "Nimble"
-            ],
-            path: "Example/Tests",
-            exclude: ["Info.plist"]
-        )
+//        .testTarget(
+//            name: "CombineAsyncTests",
+//            dependencies: [
+//                "CombineAsync", "Quick", "Nimble"
+//            ],
+//            path: "Example/Tests",
+//            exclude: ["Info.plist"]
+//        )
     ]
 )
