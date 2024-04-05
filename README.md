@@ -30,7 +30,7 @@ To run the example project, clone the repo, and run `pod install` from the Examp
 You can easily install CombineAsync via [CocoaPods](https://cocoapods.org). Add the following line to your Podfile:
 
 ```ruby
-pod 'CombineAsync', '~> 1.6'
+pod 'CombineAsync', '~> 2.0'
 ```
 
 ### Swift Package Manager (Xcode)
@@ -74,10 +74,10 @@ Convert any object that implements `Publisher` into Swift async with a single ca
 let result = await publisher.sinkAsynchronously()
 
 // Specify a timeout explicitly
-let timedResult = await publisher.sinkAsynchronously(timeout: 1)
+let timedResult = await publisher.waitForOutput(timeout: 1)
 
 // No timeout
-let noTimeoutResult = await publisher.sinkAsynchronously(timeout: .none)
+let noTimeoutResult = await publisher.waitForOutputIndefinitely()
 ```
 
 ### Sequence of Publisher to an Array of Output
@@ -89,10 +89,10 @@ Convert a sequence of `Publisher` into async with a single call:
 let results = await arrayOfPublishers.sinkAsynchronously()
 
 // Specify a timeout
-let timedResults = await arrayOfPublishers.sinkAsynchronously(timeout: 1)
+let timedResults = await arrayOfPublishers.waitForOutputs(timeout: 1)
 
 // No timeout
-let noTimeoutResult = await arrayOfPublishers.sinkAsynchronously(timeout: .none)
+let noTimeoutResult = await arrayOfPublishers.waitForOutputsIndefinitely()
 ```
 
 ### Future from Async
@@ -130,7 +130,7 @@ try await withCheckedThrowingContinuation(timeout: 30) { continuation in
 
 ### Publisher Debounce Async Sink
 
-Execute asynchronous code inside a sink and make it run atomically:
+Execute asynchronous code inside a sink and make it run atomically and debounced if its still run asyncrhonous task:
 
 ```swift
 publisher.debounceAsyncSink { output in
@@ -143,7 +143,7 @@ publisher.debounceAsyncSink { output in
 Automatically release a closure in the sink after a specified duration or when an object is released:
 
 ```swift
-publisher.autoReleaseSink(retainedTo: self, timeout: 60) { _ in
+publisher.autoReleaseSink(timeout: 60) { _ in
     // Handle completion
 } receiveValue: { 
     // Handle value reception
@@ -175,18 +175,6 @@ publisher.replaceError { error in convertErrorToOutput(error) }
 
 // Attempt to convert errors to output and produce AnyPublisher<Output, Failure>
 publisher.replaceErrorIfNeeded { error in convertErrorToOutputIfNeeded(error) }
-```
-
-### Sequence of Publisher to a Single Publisher
-
-Merge a sequence of `Publisher` into a single `Publisher` that emits an array of output:
-
-```swift
-// Collect all emitted elements from all publishers
-let allElementsEmittedPublisher = arrayOfPublishers.merged()
-
-// Collect only the first emitted element from all publishers
-let firstElementsEmittedPublisher = arrayOfPublishers.mergedFirsts()
 ```
 
 ### Publisher Async Map
