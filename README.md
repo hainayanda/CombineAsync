@@ -130,7 +130,7 @@ try await withCheckedThrowingContinuation(timeout: 30) { continuation in
 
 ### Publisher Debounce Async Sink
 
-Execute asynchronous code inside a sink and make it run atomically and debounced if its still run asyncrhonous task:
+Execute asynchronous code inside a sink and make it debounced if its still running asyncrhonous task:
 
 ```swift
 publisher.debounceAsyncSink { output in
