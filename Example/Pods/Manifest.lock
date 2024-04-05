@@ -1,9 +1,9 @@
 PODS:
-  - CombineAsync (1.0.3):
-    - Retain (~> 1.0.1)
+  - CombineAsync (2.0.0):
+    - Retain (~> 1.0.2)
   - Nimble (12.0.0)
   - Quick (7.0.0)
-  - Retain (1.0.1)
+  - Retain (1.0.2)
 
 DEPENDENCIES:
   - CombineAsync (from `../`)
@@ -21,11 +21,11 @@ EXTERNAL SOURCES:
     :path: "../"
 
 SPEC CHECKSUMS:
-  CombineAsync: 2091f0cd7bda3e68434f6734f2ee3872dd1099a2
+  CombineAsync: 17c2e24d6f6814b8da562f17fe3c0ed683736291
   Nimble: 02a4990866e51868303a466970cd1c81bb84a192
   Quick: f57e9c1acc5ff48d2b04e23a17b4892eda5a3b09
-  Retain: 539b7c04ff369886c7e633ef1a76d0d1b11466db
+  Retain: efd4653face60bd91edb306a0caff9a247a0fa78
 
 PODFILE CHECKSUM: 7111cabbd510e4fb32823edb28f2d28dbcbf4418
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.15.2

@@ -30,14 +30,14 @@ Retain is available through [CocoaPods](https://cocoapods.org). To install
 it, simply add the following line to your Podfile:
 
 ```ruby
-pod 'Retain', '~> 1.0.1'
+pod 'Retain', '~> 1.0.2'
 ```
 
 ### Swift Package Manager from XCode
 
 - Add it using XCode menu **File > Swift Package > Add Package Dependency**
 - Add **<https://github.com/hainayanda/Retain.git>** as Swift Package URL
-- Set rules at **version**, with **Up to Next Major** option and put **1.0.1** as its version
+- Set rules at **version**, with **Up to Next Major** option and put **1.0.2** as its version
 - Click next and wait
 
 ### Swift Package Manager from Package.swift
@@ -46,7 +46,7 @@ Add as your target dependency in **Package.swift**
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/hainayanda/Retain.git", .upToNextMajor(from: "1.0.1"))
+    .package(url: "https://github.com/hainayanda/Retain.git", .upToNextMajor(from: "1.0.2"))
 ]
 ```
 
